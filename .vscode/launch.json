@@ -10,6 +10,13 @@
             "request": "launch",
             "module": "src.scripts.camera",
             "justMyCode": true
+        },
+        {
+            "name": "sicko mode",
+            "type": "python",
+            "request": "launch",
+            "module": "src.scripts.sicko",
+            "justMyCode": true
         }
     ]
 }
