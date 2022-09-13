@@ -1,10 +1,8 @@
 import os
 import sys
-import random
 from typing import Optional, Tuple, cast
 
 import carla
-import numpy
 
 from .log import info
 
@@ -80,8 +78,13 @@ class Session:
     
     def _set_seed(self):
         info('Setting random seed.')
+
+        import random
         random.seed(self._seed)
+
+        import numpy.random
         numpy.random.seed(self._seed)
+
         self.traffic_manager.set_random_device_seed(self._seed)
     
     def _setup_world(self):
