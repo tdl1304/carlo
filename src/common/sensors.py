@@ -1,6 +1,6 @@
 import carla
 
-from .client import world, blueprints
+from .session import session
 from .log import info
 
 
@@ -10,7 +10,7 @@ def add_camera(
     parent: carla.Actor = None,
 ):
     """Add a camera to the world."""
-    blueprint = blueprints.find(sensor_type)
-    camera = world.spawn_actor(blueprint, transform, attach_to=parent)
+    blueprint = session.blueprints.find(sensor_type)
+    camera = session.world.spawn_actor(blueprint, transform, attach_to=parent)
     info(f'Added {sensor_type}')
     return camera

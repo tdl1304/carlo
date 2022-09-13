@@ -3,16 +3,14 @@ from queue import Queue
 import numpy as np
 import cv2
 
-from src.common.client import world, reload_world, sync_mode
+from src.common.session import Session
 from src.common.spawn import spawn_vehicles, spawn_ego
 from src.common.sensors import add_camera
 from src.util.stopwatch import Stopwatch
 from src.util.ema import ExponentialMovingAverage
 
 
-with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
-    reload_world()
-
+with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(autopilot=True)
 
@@ -32,7 +30,7 @@ with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
         print(f'dt: {dt:.3f} s, avg: {frame_time.value:.3f} s, FPS: {1 / frame_time.value:.1f} Hz')
     
     def camera_get():
-        world.tick()
+        session.world.tick()
         return camera_queue.get()
 
     camera.listen(camera_put)
@@ -48,5 +46,3 @@ with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
         cv2.destroyWindow(window_title)
     
     loop()
-
-    reload_world()

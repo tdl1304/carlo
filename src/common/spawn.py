@@ -3,11 +3,8 @@ from typing import List
 
 import carla
 
-from .client import world, world_map, blueprints
+from .session import session
 from .log import info
-
-
-spawn_points = world_map.get_spawn_points()
 
 
 def spawn_vehicles(
@@ -18,10 +15,11 @@ def spawn_vehicles(
 ) -> List[carla.Vehicle]:
     """Spawn vehicles at random spawn points."""
     actors: List[carla.Vehicle] = []
+    spawn_points = session.map.get_spawn_points()
     while len(actors) < count:
         spawn_point = random.choice(spawn_points)
-        blueprint = random.choice(blueprints.filter(filter))
-        actor = world.try_spawn_actor(blueprint, spawn_point)
+        blueprint = random.choice(session.blueprints.filter(filter))
+        actor = session.world.try_spawn_actor(blueprint, spawn_point)
         if actor:
             actors.append(actor)
             if autopilot:

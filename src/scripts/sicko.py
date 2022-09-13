@@ -6,7 +6,7 @@ import cv2
 
 import carla
 
-from src.common.client import world, reload_world, sync_mode
+from src.common.session import Session
 from src.common.spawn import spawn_vehicles, spawn_ego
 from src.common.sensors import add_camera
 from src.util.stopwatch import Stopwatch
@@ -59,9 +59,7 @@ def get_control() -> carla.VehicleControl:
     return control
 
 
-with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
-    reload_world()
-
+with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(autopilot=False)
 
@@ -83,7 +81,7 @@ with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
     def camera_get():
         control = get_control()
         ego.apply_control(control)
-        world.tick()
+        session.world.tick()
         return camera_queue.get()
 
     camera.listen(camera_put)
@@ -99,5 +97,3 @@ with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
         cv2.destroyWindow(window_title)
     
     loop()
-
-    reload_world()

@@ -1,13 +1,11 @@
 from queue import Queue
-from src.common.client import world, reload_world, sync_mode
+from src.common.session import Session
 from src.common.sensors import add_camera
 from src.common.spawn import spawn_vehicles, spawn_ego
 from src.util.timer import Timer
 
 
-with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
-    reload_world()
-
+with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(autopilot=True)
 
@@ -19,14 +17,9 @@ with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
 
     camera.listen(camera_put)
 
-    try:
-        while True:
-            with Timer('tick    : {avg:.3f} s, FPS: {fps:.1f} Hz'):
-                with Timer('  world : {avg:.3f} s, FPS: {fps:.1f} Hz'):
-                    world.tick()
-                with Timer('  camera: {avg:.3f} s, FPS: {fps:.1f} Hz'):
-                    camera_queue.get()
-    except KeyboardInterrupt:
-        pass
-
-    reload_world()
+    while True:
+        with Timer('tick    : {avg:.3f} s, FPS: {fps:.1f} Hz'):
+            with Timer('  world : {avg:.3f} s, FPS: {fps:.1f} Hz'):
+                session.world.tick()
+            with Timer('  camera: {avg:.3f} s, FPS: {fps:.1f} Hz'):
+                camera_queue.get()
