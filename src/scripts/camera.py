@@ -48,3 +48,5 @@ with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
         cv2.destroyWindow(window_title)
     
     loop()
+
+    reload_world()

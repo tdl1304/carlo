@@ -19,9 +19,14 @@ with sync_mode(dt=0.1, phys_dt=0.01, phys_substeps=10):
 
     camera.listen(camera_put)
 
-    while True:
-        with Timer('tick    : {avg:.3f} s, FPS: {fps:.1f} Hz'):
-            with Timer('  world : {avg:.3f} s, FPS: {fps:.1f} Hz'):
-                world.tick()
-            with Timer('  camera: {avg:.3f} s, FPS: {fps:.1f} Hz'):
-                camera_queue.get()
+    try:
+        while True:
+            with Timer('tick    : {avg:.3f} s, FPS: {fps:.1f} Hz'):
+                with Timer('  world : {avg:.3f} s, FPS: {fps:.1f} Hz'):
+                    world.tick()
+                with Timer('  camera: {avg:.3f} s, FPS: {fps:.1f} Hz'):
+                    camera_queue.get()
+    except KeyboardInterrupt:
+        pass
+
+    reload_world()
