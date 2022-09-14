@@ -31,8 +31,9 @@ def add_open3d_axis(vis):
         [0.0, 0.0, 1.0]]))
     vis.add_geometry(axis)
 
+freq = 10
 
-with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
+with Session(dt=1 / freq, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(filter='vehicle.lincoln.mkz_2020', autopilot=True)
 
@@ -44,7 +45,7 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
                       upper_fov=25,
                       lower_fov=-25,
                       channels=64,
-                      rotation_frequency=20,
+                      rotation_frequency=freq,
                       points_per_second=100000,
                   ))
     lidar_queue = lidar.add_pointcloud_queue()
@@ -103,6 +104,7 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
                     break
 
         sys.stdout.flush()
+    sys.stdout.flush()
 
     lidar.stop()
     camera.stop()
