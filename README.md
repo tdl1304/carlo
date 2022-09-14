@@ -1,4 +1,6 @@
-# Carlo (your ordinary next door Hispanic taxi driver)
+# Carlo
+
+![credits to Stable Diffusion](media/logo-1.png)
 
 Install requirements first, then run with
 
