@@ -83,6 +83,7 @@ class Session:
         log.info(f'Starting session with {server_host}:{server_port}.')
 
         self.client = carla.Client(server_host, server_port)
+        self.client.set_timeout(20)
         self.world = self.client.get_world()
         self.map = self.world.get_map()
         self.blueprints = self.world.get_blueprint_library()
