@@ -8,7 +8,7 @@ import carla
 
 from src.common.session import Session
 from src.common.spawn import spawn_vehicles, spawn_ego
-from src.common.sensors import add_camera
+from src.sensors.camera import Camera
 from src.util.stopwatch import Stopwatch
 from src.util.ema import ExponentialMovingAverage
 
@@ -63,8 +63,8 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(autopilot=False)
 
-    camera = add_camera(parent=ego)
-    camera_queue = Queue()
+    camera = Camera(parent=ego)
+    camera_queue = camera.add_queue()
 
     timer = Stopwatch()
     frame_time = ExponentialMovingAverage(mixing=0.2, initial=1)

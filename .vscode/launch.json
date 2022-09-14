@@ -12,6 +12,13 @@
             "justMyCode": true
         },
         {
+            "name": "Lidar",
+            "type": "python",
+            "request": "launch",
+            "module": "src.scripts.lidar",
+            "justMyCode": true
+        },
+        {
             "name": "sicko mode",
             "type": "python",
             "request": "launch",

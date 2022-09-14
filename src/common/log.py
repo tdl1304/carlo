@@ -1,11 +1,35 @@
 import sys
+from typing import Callable, Optional
 
-def log(*args, **kwargs):
-    file = kwargs.pop('file', sys.stderr)
-    print(*args, **kwargs, file=file)
+import colors
 
-def debug(*args, **kwargs):
-    log('[debug]', *args, **kwargs)
 
-def info(*args, **kwargs):
-    log('[info] ', *args, **kwargs)
+def log(fmt: str,
+        *args,
+        file=sys.stderr,
+        color: Optional[Callable[[str], str]] = None,
+        **kwargs,
+        ):
+
+    s = fmt.format(*args, **kwargs)
+
+    if color:
+        s = color(s)
+
+    print(s, file=file)
+
+
+def debug(fmt: str, *args, **kwargs):
+    log('[debug] ' + fmt, *args, **kwargs)
+
+
+def info(fmt: str, *args, **kwargs):
+    log('[info] ' + fmt, *args, **kwargs)
+
+
+def warn(fmt: str, *args, **kwargs):
+    log('[warn] ' + fmt, color=colors.yellow, *args, **kwargs)
+
+
+def err(fmt: str, *args, **kwargs):
+    log('[err]  ' + fmt, color=colors.red, *args, **kwargs)

@@ -4,7 +4,7 @@ from typing import Optional, Tuple, cast
 
 import carla
 
-from .log import info
+from . import log
 
 
 __all__ = ['session', 'Session']
@@ -38,7 +38,7 @@ class Session:
     
     def reload_world(self, reset_settings: bool = False):
         self.world = self.client.reload_world(reset_settings)
-        info('Reloaded world.')
+        log.info('Reloaded world.')
 
     def __enter__(self) -> 'Session':
         if session._active is not None:
@@ -51,15 +51,20 @@ class Session:
 
         self._setup_world()
 
-        info('Session active.')
+        log.info('Session active.')
         session._active = self
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
-        info('Exiting session.')
-        self.reload_world(True)
+        if exc_type is None:
+            log.info('Exiting session.')
+        else:
+            log.err(f'Exiting session due to exception:\n\t{exc_type.__name__}: {exc_value}')
+
+        self._teardown_world()
+        
+        log.info('Bye!')
         session._active = None
-        info('Bye!')
 
         if exc_type is KeyboardInterrupt:
             sys.exit(0)
@@ -68,7 +73,7 @@ class Session:
         server_host = self._server[0] or os.environ.get('CARLA_HOST', 'localhost')
         server_port = self._server[1] or int(os.environ.get('CARLA_PORT', '2000'))
 
-        info(f'Starting session with {server_host}:{server_port}.')
+        log.info(f'Starting session with {server_host}:{server_port}.')
 
         self.client = carla.Client(server_host, server_port)
         self.world = self.client.get_world()
@@ -77,7 +82,7 @@ class Session:
         self.traffic_manager = self.client.get_trafficmanager()
     
     def _set_seed(self):
-        info('Setting random seed.')
+        log.info('Setting random seed.')
 
         import random
         random.seed(self._seed)
@@ -88,9 +93,10 @@ class Session:
         self.traffic_manager.set_random_device_seed(self._seed)
     
     def _setup_world(self):
-        info('Applying world settings.')
+        log.info('Applying world settings.')
 
         settings = self.world.get_settings()
+        settings.no_rendering_mode = False
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = self._dt
         settings.substepping = True
@@ -99,6 +105,15 @@ class Session:
         self.world.apply_settings(settings)
 
         self.reload_world(False)
+    
+    def _teardown_world(self):
+        log.info('Cleaning up world.')
+
+        self.reload_world(True)
+
+        settings = self.world.get_settings()
+        settings.no_rendering_mode = True
+        self.world.apply_settings(settings)
 
 
 class _SessionProxy:
