@@ -8,9 +8,10 @@ import carla
 
 from src.common.session import Session
 from src.common.spawn import spawn_vehicles, spawn_ego
-from src.sensors.camera import Camera
+from src.sensors.camera import Camera, CameraSettings
 from src.util.stopwatch import Stopwatch
 from src.util.ema import ExponentialMovingAverage
+from src.util.timer import Timer
 
 control_state = {
     'prev': carla.VehicleControl(),
@@ -63,37 +64,27 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(autopilot=False)
 
-    camera = Camera(parent=ego)
-    camera_queue = camera.add_queue()
+    camera = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.0)), settings=CameraSettings(image_size_x=1920, image_size_y=1080, fov=90))
+    camera_queue = camera.add_numpy_queue()
 
-    timer = Stopwatch()
-    frame_time = ExponentialMovingAverage(mixing=0.2, initial=1)
+    timer_iter = Timer()
 
-    def camera_put(image):
-        data = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
-        camera_queue.put(data)
+    camera.start()
 
-        dt = timer.elapsed_seconds
-        frame_time.update(dt)
-        timer.restart()
-        print(f'dt: {dt:.3f} s, avg: {frame_time.value:.3f} s, FPS: {1 / frame_time.value:.1f} Hz')
-    
-    def camera_get():
+    window_title = 'Camera'
+    cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
+
+    while True:
+        timer_iter.tick('iter: {avg:.3f} s, FPS: {fps:.1f} Hz')
+
         control = get_control()
         ego.apply_control(control)
+
         session.world.tick()
-        return camera_queue.get()
+        image = camera_queue.get()
 
-    camera.listen(camera_put)
+        cv2.imshow(window_title, image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    def loop():
-        window_title = 'Camera'
-        cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
-        while True:
-            image = camera_get()
-            cv2.imshow(window_title, image)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        cv2.destroyWindow(window_title)
-    
-    loop()
+    cv2.destroyWindow(window_title)

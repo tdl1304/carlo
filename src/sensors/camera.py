@@ -12,8 +12,8 @@ from .sensor import SensorBase
 class CameraSettings:
     fov: Optional[float] = None
     fstop: Optional[float] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
+    image_size_x: Optional[int] = None
+    image_size_y: Optional[int] = None
     iso: Optional[float] = None
     gamma: Optional[float] = None
     shutter_speed: Optional[float] = None

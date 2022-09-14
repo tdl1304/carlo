@@ -1,4 +1,3 @@
-import numpy as np
 import cv2
 import carla
 
@@ -17,16 +16,18 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     
     camera.start()
 
+    timer_iter = Timer()
+
     window_title = 'Camera'
     cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
 
     while True:
-        with Timer('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz'):
-            session.world.tick()
-            image = camera_queue.get()
-            cv2.imshow(window_title, image)
+        timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')
+        session.world.tick()
+        image = camera_queue.get()
+        cv2.imshow(window_title, image)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
     
     cv2.destroyWindow(window_title)

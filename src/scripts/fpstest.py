@@ -12,9 +12,13 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     camera_queue = camera.add_queue()
     camera.start()
 
+    timer_iter = Timer()
+    timer_tick = Timer()
+    timer_data = Timer()
+    
     while True:
-        with Timer('tick    : {avg:.3f} s, FPS: {fps:.1f} Hz'):
-            with Timer('  world : {avg:.3f} s, FPS: {fps:.1f} Hz'):
-                session.world.tick()
-            with Timer('  camera: {avg:.3f} s, FPS: {fps:.1f} Hz'):
-                camera_queue.get()
+        timer_iter.tick('iter  : {avg:.3f} s, FPS: {fps:.1f} Hz')
+        with timer_tick.ctx('  tick: {avg:.3f} s, FPS: {fps:.1f} Hz'):
+            session.world.tick()
+        with timer_data.ctx('  data: {avg:.3f} s, FPS: {fps:.1f} Hz'):
+            camera_queue.get()

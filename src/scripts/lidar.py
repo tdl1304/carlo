@@ -75,35 +75,41 @@ with Session(dt=1 / freq, phys_dt=0.01, phys_substeps=10) as session:
     # Enable stdout buffering so we can flush once per iteration.
     sys.stdout = open(1, 'w', buffering=1024)
 
+    timer_iter = Timer()
+    timer_tick = Timer()
+    timer_data = Timer()
+    timer_gui = Timer()
+
     frame = 0
     while True:
-        with Timer('iteration: {avg:.3f} s, {fps:.1f} Hz'):
-            with Timer('\ttick: {avg:.3f} s, {fps:.1f} Hz'):
-                session.world.tick()
+        with timer_tick.ctx('\ttick: {avg:.3f} s, {fps:.1f} Hz'):
+            session.world.tick()
 
-            with Timer('\tdata: {avg:.3f} s, {fps:.1f} Hz'):
-                camera_data = camera_queue.get()
-                lidar_data = lidar_queue.get()
+        with timer_data.ctx('\tdata: {avg:.3f} s, {fps:.1f} Hz'):
+            camera_data = camera_queue.get()
+            lidar_data = lidar_queue.get()
 
-            with Timer('\tgui : {avg:.3f} s, {fps:.1f} Hz'):
-                point_list.points = lidar_data.points
-                point_list.colors = lidar_data.colors
+        with timer_gui.ctx('\tgui : {avg:.3f} s, {fps:.1f} Hz'):
+            point_list.points = lidar_data.points
+            point_list.colors = lidar_data.colors
 
-                if frame == 2:
-                    vis.add_geometry(point_list)
-                vis.update_geometry(point_list)
+            if frame == 2:
+                vis.add_geometry(point_list)
+            vis.update_geometry(point_list)
 
-                vis.poll_events()
-                vis.update_renderer()
-                # # This can fix Open3D jittering issues:
-                time.sleep(0.005)
-                frame += 1
+            vis.poll_events()
+            vis.update_renderer()
+            # # This can fix Open3D jittering issues:
+            time.sleep(0.005)
+            frame += 1
 
-                cv2.imshow('RGB Camera', camera_data)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+            cv2.imshow('RGB Camera', camera_data)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
+        timer_iter.tick('iteration: {avg:.3f} s, {fps:.1f} Hz')
         sys.stdout.flush()
+
     sys.stdout.flush()
 
     lidar.stop()
