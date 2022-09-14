@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from queue import Queue
 from typing import Optional
 
 import carla
@@ -30,6 +29,8 @@ class Lidar(SensorBase[carla.LidarMeasurement, LidarSettings]):
     DEFAULT_BLUEPRINT = 'sensor.lidar.ray_cast'
 
     def add_pointcloud_queue(self):
+        """Creates a queue that receives LIDAR data as Open3D PointClouds."""
+
         VIRIDIS = np.array(matplotlib.cm.get_cmap('plasma').colors)
         VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
 
@@ -50,9 +51,9 @@ class Lidar(SensorBase[carla.LidarMeasurement, LidarSettings]):
 
             points[:, :1] = -points[:, :1]
 
-            return (
-                o3d.utility.Vector3dVector(points),
-                o3d.utility.Vector3dVector(int_color)
-            )
+            pc = o3d.geometry.PointCloud()
+            pc.points = o3d.utility.Vector3dVector(points)
+            pc.colors = o3d.utility.Vector3dVector(int_color)
+            return pc
 
         return self.add_queue(transform=transform)

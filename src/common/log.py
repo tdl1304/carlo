@@ -10,6 +10,15 @@ def log(fmt: str,
         color: Optional[Callable[[str], str]] = None,
         **kwargs,
         ):
+    """Print a log message.
+
+    Formats the message with the given arguments and keyword arguments, and
+    prints it to the given file. If a color function is given, the message is
+    transformed with it before printing.
+    
+    :file: The file to print to. Defaults to stderr.
+    :color: A function that takes a string and returns a colorized string (with ANSI escape codes).
+    """
 
     s = fmt.format(*args, **kwargs)
 

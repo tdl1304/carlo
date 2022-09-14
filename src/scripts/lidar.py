@@ -82,11 +82,11 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
 
             with Timer('\tdata: {avg:.3f} s, {fps:.1f} Hz'):
                 camera_data = camera_queue.get()
-                lidar_points, lidar_colors = lidar_queue.get()
+                lidar_data = lidar_queue.get()
 
             with Timer('\tgui : {avg:.3f} s, {fps:.1f} Hz'):
-                point_list.points = lidar_points
-                point_list.colors = lidar_colors
+                point_list.points = lidar_data.points
+                point_list.colors = lidar_data.colors
 
                 if frame == 2:
                     vis.add_geometry(point_list)

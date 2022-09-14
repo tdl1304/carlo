@@ -37,10 +37,16 @@ class Session:
         self._seed = seed
     
     def reload_world(self, reset_settings: bool = False):
+        """Reloads the current world.
+        
+        :param reset_settings: Whether to reset the world settings to their default values.
+        For example, this will disable synchronous mode.
+        """
         self.world = self.client.reload_world(reset_settings)
         log.info('Reloaded world.')
 
     def __enter__(self) -> 'Session':
+        """Starts the session and sets the global active session."""
         if session._active is not None:
             raise RuntimeError('Session already active')
 
@@ -56,6 +62,7 @@ class Session:
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
+        """Stops the session and clears the global active session."""
         if exc_type is None:
             log.info('Exiting session.')
         else:
@@ -117,6 +124,9 @@ class Session:
 
 
 class _SessionProxy:
+    """Helper class to allow "reassignment" of the active session
+    after the `session` variable has been imported by other modules.
+    """
     _active: Session = None
 
     def __getattr__(self, key: str):

@@ -10,10 +10,14 @@ from src.common.session import session
 _T = TypeVar('_T')
 _S = TypeVar('_S')
 _O = TypeVar('_O')
-_B = TypeVar('_B')
 
 
 class Sensor(Generic[_T]):
+    """Represents a Carla Sensor.
+    
+    Provides convenience methods for spawning sensors and retrieving data from them.
+    """
+
     _callbacks: List[Callable[[_T], None]]
     actor: carla.Sensor
 
@@ -34,20 +38,32 @@ class Sensor(Generic[_T]):
         )
 
     def add_callback(self, callback: Callable[[_T], None]) -> None:
+        """Adds a callback that is called when new sensor data is received."""
         self._callbacks.append(callback)
 
     def remove_callback(self, callback: Callable[[_T], None]) -> None:
+        """Removes a callback."""
+        self._callbacks.append(callback)
         self._callbacks.remove(callback)
 
     def add_queue(self, transform: Callable[[_T], _O] = lambda x: x) -> 'Queue[_O]':
+        """Creates a queue that receives (optionally transformed) sensor data.
+        
+        :transform: A function that transforms the sensor data before it is put into the queue.
+        """
         queue = Queue()
+
         def writer(x):
             return queue.put(transform(x))
+
+        # Store the queue on the writer callback so we can find it later during removal.
         writer._queue = queue
+
         self.add_callback(writer)
         return queue
 
     def remove_queue(self, queue: Queue) -> None:
+        """Removes a queue."""
         for callback in self._callbacks:
             if getattr(callback, '_queue', None) is queue:
                 self.remove_callback(callback)
@@ -56,9 +72,11 @@ class Sensor(Generic[_T]):
             raise ValueError('queue not found')
 
     def start(self) -> None:
+        """Starts listening for sensor data."""
         self.actor.listen(self._put)
 
     def stop(self) -> None:
+        """Stops listening for sensor data."""
         self.actor.stop()
 
     def _put(self, value: _T) -> None:
@@ -67,6 +85,16 @@ class Sensor(Generic[_T]):
 
 
 class SensorBase(Sensor[_T], Generic[_T, _S]):
+    """Base class for new Carla sensor wrapper types.
+
+    Subclasses should define their own sensor settings dataclass,
+    and pass the sensor data type and settings type as type parameters
+    when inheriting from this class.
+
+    Subclasses should define a DEFAULT_BLUEPRINT class attribute that
+    specifies the default blueprint to use for the sensor.
+    """
+
     DEFAULT_BLUEPRINT: Optional[str] = None
 
     def __init__(self,
