@@ -43,7 +43,6 @@ class Sensor(Generic[_T]):
 
     def remove_callback(self, callback: Callable[[_T], None]) -> None:
         """Removes a callback."""
-        self._callbacks.append(callback)
         self._callbacks.remove(callback)
 
     def add_queue(self, transform: Callable[[_T], _O] = lambda x: x) -> 'Queue[_O]':
