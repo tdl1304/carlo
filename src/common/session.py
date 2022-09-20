@@ -52,10 +52,10 @@ class Session:
 
         self._connect()
 
+        self._setup_world()
+
         if self._seed is not None:
             self._set_seed()
-
-        self._setup_world()
 
         log.info('Session active.')
         session._active = self
@@ -103,6 +103,8 @@ class Session:
     def _setup_world(self):
         log.info('Applying world settings.')
 
+        self.traffic_manager.set_synchronous_mode(True)
+
         settings = self.world.get_settings()
         settings.no_rendering_mode = False
         settings.synchronous_mode = True
@@ -111,7 +113,6 @@ class Session:
         settings.max_substep_delta_time = self._phys_dt
         settings.max_substeps = self._phys_substeps
         self.world.apply_settings(settings)
-
         self.reload_world(False)
     
     def _teardown_world(self):
@@ -122,6 +123,8 @@ class Session:
         settings = self.world.get_settings()
         settings.no_rendering_mode = True
         self.world.apply_settings(settings)
+
+        self.traffic_manager.set_synchronous_mode(False)
 
 
 class _SessionProxy:
