@@ -25,7 +25,7 @@ class Camera(SensorBase[carla.Image, CameraSettings]):
     def add_numpy_queue(self) -> 'Queue[np.ndarray]':
         """Creates a queue that receives camera images as numpy arrays."""
 
-        def transform(image: carla.Image) -> None:
+        def transform(image: carla.Image) -> np.ndarray:
             data = np.frombuffer(image.raw_data, dtype=np.uint8)
             data = np.reshape(data, (image.height, image.width, 4))
             return data
