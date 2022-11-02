@@ -16,4 +16,4 @@ RUN --mount=type=cache,mode=0755,target=/root/.cache/pypoetry \
 
 COPY . .
 
-CMD ["python", "-m", "src.scripts.idun"]
+CMD ["python", "-m", "src.scripts.idun", "output"]
