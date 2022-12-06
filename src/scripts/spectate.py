@@ -3,7 +3,7 @@ import time
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import IO
+from typing import IO, List
 
 import carla
 import cv2
@@ -48,39 +48,28 @@ def main(
 
     try:
         with Session(spectate=True) as session:
-            for _ in range(3):
-                actors = session.world.get_actors().filter('vehicle.*')
-                heros = [actor
-                        for actor in actors
-                        if actor.attributes.get('role_name') == 'hero']
-                if len(heros) == 0:
-                    time.sleep(1)
-                    continue
-                elif len(heros) == 1:
-                    hero, = heros
-                    break
-                else:
-                    raise RuntimeError('Multiple heros found.')
-            else:
-                print('No hero vehicle found.')
-                sys.exit(1)
+            hero = find_hero(session)
 
-            print('Hero:', hero)
-
-            fpv_camera = Camera(parent=hero, transform=carla.Transform(carla.Location(z=3)), settings={'role_name': 'spectate-fpv'})
             bev_camera = Camera(parent=hero, transform=carla.Transform(carla.Location(z=50), carla.Rotation(pitch=-90)), settings={'role_name': 'spectate-bev'})
-            fpv_queue = fpv_camera.add_numpy_queue()
             bev_queue = bev_camera.add_numpy_queue()
-            fpv_camera.start()
             bev_camera.start()
+
+            fpv_cameras = find_intercepted_cameras(session)
+            fpv_cameras = [Camera(actor=camera) for camera in fpv_cameras]
+            fpv_queues = [camera.add_numpy_queue() for camera in fpv_cameras]
+            for camera in fpv_cameras:
+                camera.start()
 
             timer_iter = Timer()
 
             try:
                 while True:
                     timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')
-                    fpv_image = fpv_queue.get()
+
                     bev_image = bev_queue.get()
+
+                    fpv_images = [queue.get() for queue in fpv_queues]
+                    fpv_image = cv2.hconcat(fpv_images)
 
                     for writer in fpv_writers:
                         writer(fpv_image)
@@ -91,7 +80,6 @@ def main(
                         break
                 
             finally:
-                fpv_camera.destroy()
                 bev_camera.destroy()
         
     finally:
@@ -160,6 +148,78 @@ class VideoSaver:
     def close(self):
         self._pipe.close()
         self._ffmpeg.wait()
+
+
+def find_hero(session: Session):
+    for _ in range(3):
+        actors = session.world.get_actors().filter('vehicle.*')
+        heros = [actor
+                for actor in actors
+                if actor.attributes.get('role_name') == 'hero']
+        if len(heros) == 0:
+            time.sleep(1)
+            continue
+        elif len(heros) == 1:
+            break
+        else:
+            raise RuntimeError('Multiple heros found.')
+    else:
+        print('No hero vehicle found.')
+        sys.exit(1)
+
+    hero = heros[0]
+    print('Hero:', hero)
+    return hero
+    
+
+def find_intercepted_cameras(session: Session):
+    for _ in range(3):
+        cameras = session.world.get_actors().filter('sensor.camera.rgb')
+        cameras = [camera
+                    for camera in cameras
+                    if camera.attributes.get('role_name') == 'front'
+                    and camera.parent.attributes.get('role_name') == 'hero']
+        if len(cameras) == 0:
+            time.sleep(1)
+            continue
+        elif len(cameras) == 3:
+            break
+        else:
+            raise RuntimeError(f'Unexpected number of cameras found ({len(cameras)}).')
+    else:
+        print('No cameras found.')
+        sys.exit(1)
+
+    for camera in cameras:
+        print(camera.id, camera.get_transform().rotation)
+    return sort_cameras(cameras)
+
+
+def sort_cameras(cameras: List):
+    """Sorts the cameras by their yaw angle."""
+    yaws = [camera.get_transform().rotation.yaw for camera in cameras]
+    diff_rows = [
+        [angle_diff(a, b) for b in yaws]
+        for a in yaws
+    ]
+
+    for i, row in enumerate(diff_rows):
+        if sum(row) == 0:
+            break
+    else:
+        raise ValueError('Could not find middle camera.')
+
+    i_middle = i
+    i_left = row.index(60)
+    i_right = row.index(-60)
+
+    return cameras[i_left], cameras[i_middle], cameras[i_right]
+
+
+def angle_diff(a: float, b: float) -> float:
+    """Returns the difference between two angles in degrees."""
+    diff = ((a - b) + 180) % 360 - 180
+    return 60 * round(diff / 60)
 
 
 if __name__ == '__main__':
