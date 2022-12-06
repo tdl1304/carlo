@@ -32,6 +32,8 @@ def add_open3d_axis(vis):
     vis.add_geometry(axis)
 
 freq = 10
+lidar_channels = 64
+lidar_horizontal_resolution = 1  # degrees
 
 with Session(dt=1 / freq, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
@@ -44,11 +46,12 @@ with Session(dt=1 / freq, phys_dt=0.01, phys_substeps=10) as session:
                       noise_stddev=0.1,
                       upper_fov=25,
                       lower_fov=-25,
-                      channels=64,
+                      channels=lidar_channels,
                       rotation_frequency=freq,
-                      points_per_second=100000,
+                      points_per_second=lidar_channels * freq * round(360 / lidar_horizontal_resolution),
                   ))
     lidar_queue = lidar.add_pointcloud_queue()
+    lidar_np_queue = lidar.add_numpy_queue()
 
     camera = Camera(parent=ego,
                     transform=carla.Transform(carla.Location(z=2.0)),
@@ -88,6 +91,7 @@ with Session(dt=1 / freq, phys_dt=0.01, phys_substeps=10) as session:
         with timer_data.ctx('\tdata: {avg:.3f} s, {fps:.1f} Hz'):
             camera_data = camera_queue.get()
             lidar_data = lidar_queue.get()
+            lidar_img = lidar_np_queue.get()
 
         with timer_gui.ctx('\tgui : {avg:.3f} s, {fps:.1f} Hz'):
             point_list.points = lidar_data.points
@@ -102,6 +106,9 @@ with Session(dt=1 / freq, phys_dt=0.01, phys_substeps=10) as session:
             # # This can fix Open3D jittering issues:
             time.sleep(0.005)
             frame += 1
+
+            # lidar_img = lidar_img.reshape((lidar_channels, -1))
+            # cv2.imshow('Lidar Image', lidar_img)
 
             cv2.imshow('RGB Camera', camera_data)
             if cv2.waitKey(1) & 0xFF == ord('q'):

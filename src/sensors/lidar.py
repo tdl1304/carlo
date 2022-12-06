@@ -28,6 +28,16 @@ class LidarSettings:
 class Lidar(SensorBase[carla.LidarMeasurement, LidarSettings]):
     DEFAULT_BLUEPRINT = 'sensor.lidar.ray_cast'
 
+    def add_numpy_queue(self):
+        """Creates a queue that receives LIDAR data as numpy arrays."""
+
+        def transform(measurement: carla.LidarMeasurement) -> np.ndarray:
+            data = np.copy(np.frombuffer(measurement.raw_data, dtype=np.dtype('f4')))
+            data = np.reshape(data, (int(data.shape[0] / 4), 4))
+            return data
+
+        return self.add_queue(transform=transform)
+
     def add_pointcloud_queue(self):
         """Creates a queue that receives LIDAR data as Open3D PointClouds."""
 

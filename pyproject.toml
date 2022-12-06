@@ -13,6 +13,7 @@ python = "^3.8"
 carla = "0.9.13"
 ansicolors = "^1.1.8"
 numpy = "^1.23.4"
+typer = {extras = ["all"], version = "^0.7.0"}
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.0.0"

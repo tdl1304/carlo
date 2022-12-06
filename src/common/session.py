@@ -28,13 +28,15 @@ class Session:
         dt: float = 0.1,
         phys_dt: float = 0.01,
         phys_substeps: int = 10,
-        seed: Optional[int] = 0,
+        seed: int = 0,
+        spectate: bool = False,
     ):
         self._server = server
         self._dt = dt
         self._phys_dt = phys_dt
         self._phys_substeps = phys_substeps
         self._seed = seed
+        self._spectate = spectate
     
     def reload_world(self, reset_settings: bool = False):
         """Reloads the current world.
@@ -52,10 +54,11 @@ class Session:
 
         self._connect()
 
-        self._setup_world()
+        if not self._spectate:
+            self._setup_world()
 
-        if self._seed is not None:
-            self._set_seed()
+            if self._seed is not None:
+                self._set_seed()
 
         log.info('Session active.')
         session._active = self
@@ -68,10 +71,11 @@ class Session:
         else:
             log.err(f'Exiting session due to exception:\n\t{exc_type.__name__}: {exc_value}')
 
-        self._teardown_world()
+        if not self._spectate:
+            self._teardown_world()
         
         log.info('Bye!')
-        session._active = None
+        session._active = None  # type: ignore
 
         if exc_type is KeyboardInterrupt:
             sys.exit(0)
@@ -131,7 +135,7 @@ class _SessionProxy:
     """Helper class to allow "reassignment" of the active session
     after the `session` variable has been imported by other modules.
     """
-    _active: Session = None
+    _active: Session = None  # type: ignore
 
     def __getattr__(self, key: str):
         return getattr(self._active, key)

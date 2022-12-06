@@ -64,7 +64,7 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(autopilot=False)
 
-    camera = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.0)), settings=CameraSettings(image_size_x=1920, image_size_y=1080, fov=90))
+    camera = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.0)), settings=CameraSettings())
     camera_queue = camera.add_numpy_queue()
 
     timer_iter = Timer()
