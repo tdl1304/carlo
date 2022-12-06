@@ -19,11 +19,16 @@ def main(
     bev_img: bool = False,
     fpv_video: bool = True,
     bev_video: bool = True,
+    headless: bool = True,
 ):
     save_dir = Path('.') / 'output' / 'spectate' / datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
     fpv_writers = []
     bev_writers = []
+    
+    if not headless:
+        fpv_writers.append(CVWindow('fpv'))
+        bev_writers.append(CVWindow('bev'))
 
     if fpv_img:
         fpv_dir = save_dir / 'fpv'
@@ -41,58 +46,71 @@ def main(
         save_dir.mkdir(parents=True, exist_ok=True)
         bev_writers.append(VideoSaver(save_dir / 'bev.mp4'))
 
-
-    with Session(spectate=True) as session:
-        for _ in range(3):
-            actors = session.world.get_actors().filter('vehicle.*')
-            heros = [actor
-                     for actor in actors
-                     if actor.attributes.get('role_name') == 'hero']
-            if len(heros) == 0:
-                time.sleep(1)
-                continue
-            elif len(heros) == 1:
-                hero, = heros
-                break
+    try:
+        with Session(spectate=True) as session:
+            for _ in range(3):
+                actors = session.world.get_actors().filter('vehicle.*')
+                heros = [actor
+                        for actor in actors
+                        if actor.attributes.get('role_name') == 'hero']
+                if len(heros) == 0:
+                    time.sleep(1)
+                    continue
+                elif len(heros) == 1:
+                    hero, = heros
+                    break
+                else:
+                    raise RuntimeError('Multiple heros found.')
             else:
-                raise RuntimeError('Multiple heros found.')
-        else:
-            print('No hero vehicle found.')
-            sys.exit(1)
+                print('No hero vehicle found.')
+                sys.exit(1)
 
-        print('Hero:', hero)
+            print('Hero:', hero)
 
-        fpv_camera = Camera(parent=hero, transform=carla.Transform(carla.Location(z=3)))
-        bev_camera = Camera(parent=hero, transform=carla.Transform(carla.Location(z=50), carla.Rotation(pitch=-90)))
-        fpv_queue = fpv_camera.add_numpy_queue()
-        bev_queue = bev_camera.add_numpy_queue()
-        fpv_camera.start()
-        bev_camera.start()
+            fpv_camera = Camera(parent=hero, transform=carla.Transform(carla.Location(z=3)), settings={'role_name': 'spectate-fpv'})
+            bev_camera = Camera(parent=hero, transform=carla.Transform(carla.Location(z=50), carla.Rotation(pitch=-90)), settings={'role_name': 'spectate-bev'})
+            fpv_queue = fpv_camera.add_numpy_queue()
+            bev_queue = bev_camera.add_numpy_queue()
+            fpv_camera.start()
+            bev_camera.start()
 
-        timer_iter = Timer()
+            timer_iter = Timer()
 
-        fpv_title = 'FPV'
-        bev_title = 'BEV'
-        cv2.namedWindow(fpv_title, cv2.WINDOW_AUTOSIZE)
-        cv2.namedWindow(bev_title, cv2.WINDOW_AUTOSIZE)
+            try:
+                while True:
+                    timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')
+                    fpv_image = fpv_queue.get()
+                    bev_image = bev_queue.get()
 
-        while True:
-            timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')
-            fpv_image = fpv_queue.get()
-            bev_image = bev_queue.get()
-            cv2.imshow(fpv_title, fpv_image)
-            cv2.imshow(bev_title, bev_image)
+                    for writer in fpv_writers:
+                        writer(fpv_image)
+                    for writer in bev_writers:
+                        writer(bev_image)
 
-            for writer in fpv_writers:
-                writer.write(fpv_image)
-            for writer in bev_writers:
-                writer.write(bev_image)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                
+            finally:
+                fpv_camera.destroy()
+                bev_camera.destroy()
+        
+    finally:
+        for writer in fpv_writers:
+            writer.close()
+        for writer in bev_writers:
+            writer.close()
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
 
-        cv2.destroyWindow(fpv_title)
-        cv2.destroyWindow(bev_title)
+class CVWindow:
+    def __init__(self, title: str):
+        self.title = title
+        cv2.namedWindow(self.title, cv2.WINDOW_AUTOSIZE)
+
+    def __call__(self, image):
+        cv2.imshow(self.title, image)
+    
+    def close(self):
+        cv2.destroyWindow(self.title)
 
 
 class ImageSaver:
@@ -117,6 +135,8 @@ class VideoSaver:
         # Open an ffmpeg subprocess to save input images as a video
         ffmpeg_args = (
             'ffmpeg',
+            '-hide_banner',
+            '-loglevel', 'warning',
             '-f', 'image2pipe',
             '-vcodec', 'png',
             '-r', '60',
@@ -124,6 +144,7 @@ class VideoSaver:
             '-c:v', 'libx264',
             '-pix_fmt', 'yuv420p',
             '-crf', '18',
+            '-frag_duration', str(int(1e6)),
             str(path),
         )
         self._ffmpeg = subprocess.Popen(ffmpeg_args, stdin=subprocess.PIPE)
