@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 import carla
 import cv2
 
@@ -11,19 +13,21 @@ class TransformFile:
         self.intrinsics = {}
         self.count = 0
         
+        root_path = Path(os.curdir)
         if output_dir is not None:
-            self.output_dir = output_dir
+            self.output_dir = root_path / output_dir
         else:
             dt = datetime.now()
-            self.output_dir = str(int(datetime.timestamp(dt)))
+            self.output_dir = root_path / str(int(datetime.timestamp(dt)))
         
+        self.output_dir.mkdir(exist_ok=True, parents=True)
         self.image_dir = self.output_dir + '/images'
+        self.image_dir.mkdir(exist_ok=True, parents=True)
 
     def append_frame(self, image: ndarray, transform: carla.Transform):
         # Save the image to output
         file_path = self.image_dir + '/' + f'{self.count:04d}' + '.png'
         cv2.imwrite(file_path, image)
-        image.save_to_disk(file_path)
         self.count += 1
 
         # Get the matrix from the transform
