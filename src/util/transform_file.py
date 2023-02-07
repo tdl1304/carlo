@@ -1,5 +1,8 @@
 import json
 import carla
+import cv2
+
+from numpy import ndarray
 from datetime import datetime
 
 class TransformFile:
@@ -16,9 +19,10 @@ class TransformFile:
         
         self.image_dir = self.output_dir + '/images'
 
-    def append_frame(self, image: carla.Image, transform: carla.Transform):
+    def append_frame(self, image: ndarray, transform: carla.Transform):
         # Save the image to output
-        file_path = self.image_dir + '/' + f'{str(self.count):04d}' + '.png'
+        file_path = self.image_dir + '/' + f'{self.count:04d}' + '.png'
+        cv2.imwrite(file_path, image)
         image.save_to_disk(file_path)
         self.count += 1
 
