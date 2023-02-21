@@ -83,6 +83,7 @@ class Session:
     def _connect(self):
         server_host = self._server[0] or os.environ.get('CARLA_HOST', 'localhost')
         server_port = self._server[1] or int(os.environ.get('CARLA_PORT', '2000'))
+        server_traffic_manager_port = int(os.environ.get('CARLA_TM_PORT', '8000'))
 
         log.info(f'Starting session with {server_host}:{server_port}.')
 
@@ -91,7 +92,7 @@ class Session:
         self.world = self.client.get_world()
         self.map = self.world.get_map()
         self.blueprints = self.world.get_blueprint_library()
-        self.traffic_manager = self.client.get_trafficmanager()
+        self.traffic_manager = self.client.get_trafficmanager(server_traffic_manager_port)
     
     def _set_seed(self):
         log.info('Setting random seed.')
