@@ -1,18 +1,41 @@
 from datetime import datetime
 import json
 import os
+import sys
 from pathlib import Path
 import numpy as np
 
 def conversion(matrix: np.ndarray):
-    conversion_matrix = np.array([[5, 0, 0, 0],
-                        [0, 0, -2, 0],
-                        [0, 1, 0, 0],
-                        [0, 0, 0, 1]])
-    new_matrix = np.matmul(conversion_matrix, matrix)
-    return new_matrix
+    matrix_1 = np.array([[1, 0, 0, 0],
+                [0, 0, -1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, 1]])
 
-def convert():
+    # # Step 1: Flip around Z
+    # matrix_2 = np.array([[0, 0, 1, 0],
+    #                 [0, 1, 0, 0],
+    #                 [-1, 0, 0, 0],
+    #                 [0, 0, 0, 1]])
+
+    # # Step 1: Flip around Y
+    # matrix_3 = np.array([[0, -1, 0, 0],
+    #                         [1, 0, 0, 0],
+    #                         [0, 0, 1, 0],
+    #                         [0, 0, 0, 1]])
+    
+    # Step 2: Multiply the transformation matrix with the conversion matrix
+    transformed_matrix = np.matmul(matrix_1, matrix)
+    # transformed_matrix = np.matmul(matrix_2, transformed_matrix)
+    # transformed_matrix = np.matmul(matrix_3, transformed_matrix)
+    
+    # # Step 3: Flip the y and z coordinates of the resulting matrix
+    # transformed_matrix[0] = -transformed_matrix[0]
+    # transformed_matrix[1] = -transformed_matrix[1]
+    
+    # Convert the numpy array to a list of lists and return the resulting matrix
+    return transformed_matrix.tolist()
+
+def convert(file_prefix: str = None):
     root_path = Path(os.curdir)
     run_path = root_path / 'runs/no_conversion_run'
     transforms_path = run_path / 'original_transforms.json'
@@ -31,7 +54,7 @@ def convert():
         new_transform = conversion(frame['transform_matrix'])
         new_frame = {
             'file_path': frame['file_path'],
-            'transform_matrix': new_transform.tolist()
+            'transform_matrix': new_transform
         }
         new_frames.append(new_frame)
     
@@ -40,7 +63,9 @@ def convert():
 
     # Create archive file-path
     dt = datetime.now()
-    archive_path = run_path / "archive" / f'{int(datetime.timestamp(dt))}_transforms.json'
+    timestamp = int(datetime.timestamp(dt))
+    file_prefix = file_prefix or timestamp
+    archive_path = run_path / "archive" / f'{file_prefix}_transforms.json'
     
     # Save new transforms to archive
     with open(archive_path, 'w+') as f:
@@ -53,4 +78,7 @@ def convert():
     print(f"\nNew transforms saved to {archive_path}")
 
 if __name__ == "__main__":
-    convert()
+    file_prefix = None
+    if len(sys.argv) > 1:
+        file_prefix = sys.argv[1:][0]
+    convert(file_prefix)
