@@ -26,6 +26,11 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
         session.world.tick()
         image = camera_queue.get()
         cv2.imshow(window_title, image)
+        
+        transform = camera.actor.get_transform()
+        print(f"Location: {transform.location}")
+        print(f"Rotation: {transform.rotation}")
+        print(f"Transform matrix: {transform.get_matrix()}")
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
