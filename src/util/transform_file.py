@@ -48,9 +48,11 @@ class TransformFile:
     def compute_intrinsics(self, image_size_x, image_size_y, fov):
         computed_fov = math.tan(fov / 2)
         # Potensielt image_size_x / 2, ev. bruk cx, cy
+        fl_x = image_size_x / computed_fov
+        fl_y = image_size_y / computed_fov
         return {
-            "fl_x": image_size_x / computed_fov,
-            "fl_y": image_size_y / computed_fov,
+            "fl_x": fl_x,
+            "fl_y": fl_y,
             "cx": image_size_x / 2,
             "cy": image_size_y / 2,
             "w": image_size_x,
