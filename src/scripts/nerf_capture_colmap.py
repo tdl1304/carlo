@@ -1,4 +1,3 @@
-import numpy as np
 import cv2
 import carla
 
@@ -12,15 +11,27 @@ from src.util.transform_file import TransformFile
 with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     vehicles = spawn_vehicles(0, autopilot=True)
     ego = spawn_ego(autopilot=True)
+    image_tick = 0
+    ticks_per_image = 3
 
     # Ignore traffic lights 100% of the time
     session.traffic_manager.ignore_lights_percentage(ego, 100)
 
-    camera_settings = CameraSettings(image_size_x=800, image_size_y=600, fov=90)
+    camera_settings = CameraSettings(image_size_x=400, image_size_y=300, fov=90)
     # camera = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.7), carla.Rotation(pitch=-15)), settings=camera_settings)
-    camera = Camera(parent=ego, settings=camera_settings)
-    camera_queue = camera.add_numpy_queue()
-    camera.start()
+    # camera_queue = camera.add_numpy_queue()
+
+    camera_right = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.7), carla.Rotation(yaw=30)), settings=camera_settings)
+    camera_right_queue = camera_right.add_numpy_queue()
+    
+    camera_left = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.7), carla.Rotation(yaw=-30)), settings=camera_settings)
+    camera_left_queue = camera_left.add_numpy_queue()
+
+    # camera.start()
+    camera_right.start()
+    camera_left.start()
+
+    
     timer_iter = Timer()
     window_title = 'Camera'
     cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
@@ -31,19 +42,25 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     # Set the intrinsics of the camera
     transform_file.set_intrinsics(camera_settings.image_size_x, camera_settings.image_size_y, camera_settings.fov)
 
-    image_tick = 0
-    ticks_per_image = 3
+    camera = Camera(parent=ego, )
+    camera_queue = camera.add_numpy_queue()
 
     while image_tick <= 70 * ticks_per_image:
         timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')
 
         session.world.tick()
-        image = camera_queue.get()
+
+        # image = camera_queue.get()
+        image_left = camera_left_queue.get()
+        image_right = camera_right_queue.get()
+
+        # Stack images together horizontally
+        image = cv2.hconcat([image_left, image_right])
 
         # Store image every n-th tick
         if image_tick % ticks_per_image == 0:
-            # Store the image at a given path
-            transform_file.append_frame(image, carla_to_nerf(camera.actor.get_transform()))
+            transform_file.append_frame(image_left, carla_to_nerf(camera_left.actor))
+            transform_file.append_frame(image_right, carla_to_nerf(camera_right.actor))
 
         cv2.imshow(window_title, image)
 

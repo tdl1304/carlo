@@ -2,13 +2,10 @@ import json
 import math
 import os
 from pathlib import Path
-import carla
 import cv2
 import numpy as np
 
 from datetime import datetime
-
-from src.util.transformation_matrix_conversion import unreal_axis_2_blender_conversion, unreal_axis_2_blender_conversion_v2, unreal_axis_2_blender_conversion_v3, unreal_axis_2_blender_conversion_v4
 
 class TransformFile:
     def __init__(self, output_dir=None) -> None:
@@ -27,37 +24,43 @@ class TransformFile:
         self.image_dir = self.output_dir / 'images'
         self.image_dir.mkdir(exist_ok=True, parents=True)
 
-    def append_frame(self, image: np.ndarray, transform: carla.Transform):
+    def append_frame(self, image: np.ndarray, transform: list(list(float))):
         # Save the image to output
         file_path = str(self.image_dir / f'{self.count:04d}.png')
         cv2.imwrite(file_path, image)
         self.count += 1
 
-        # Get the matrix from the transform
-        # transform_matrix = unreal_axis_2_blender_conversion_v4(transform.get_matrix())
-        transform_matrix = transform.get_matrix()
-
         self.frames.append({
             'file_path': f'images/{file_path.split("/")[-1]}',
-            'transform_matrix': transform_matrix
+            'transform_matrix': transform
         })
 
-
-
-
     def compute_intrinsics(self, image_size_x, image_size_y, fov):
+        # Intrinsics from COLMAP
+        # "fl_x": 199.79105529556688,
+        # "fl_y": 81.64220292214017,
+        # "cx": 199.7199843662804,
+        # "cy": 149.99511991974333,
+        # "w": 400,
+        # "h": 300,
+        # "camera_model": "OPENCV",
+        # "k1": -0.0008745578413395661,
+        # "k2": -0.00012159146577227206,
+        # "p1": 0.00010041156063693768,
+        # "p2": -0.0007499095300458892,
+
         computed_fov = math.tan(fov / 2)
-        # Potensielt image_size_x / 2, ev. bruk cx, cy
-        fl_x = image_size_x / computed_fov
-        fl_y = image_size_y / computed_fov
+        # # Potensielt image_size_x / 2, ev. bruk cx, cy
+        fl_x = (0.5 * image_size_x) / computed_fov
+        fl_y = (0.5 * image_size_y) / computed_fov
         return {
+            "camera_model": "OPENCV",
             "fl_x": fl_x,
             "fl_y": fl_y,
             "cx": image_size_x / 2,
             "cy": image_size_y / 2,
             "w": image_size_x,
             "h": image_size_y,
-            "camera_model": "OPENCV",
             "k1": 0,
             "k2": 0,
             "p1": 0,
@@ -76,3 +79,4 @@ class TransformFile:
                 'frames': self.frames
             }
             json.dump(obj, f, indent=4)
+        print(f"Saved run to {output_path}")
