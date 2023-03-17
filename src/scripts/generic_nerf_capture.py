@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from typing import List
-
 import cv2
 import carla
 
 from src.common.session import Session
-from src.common.spawn import spawn_ego
+from src.common.spawn import spawn_ego, spawn_vehicles
 from src.sensors.camera_rig import CameraRig
 from src.util.timer import Timer
 from src.util.transform_file import TransformFile
@@ -38,7 +37,7 @@ def run_session(experiment_settings: List[ExperimentSettings]):
             stop_next_straight = False
             next_action = None
 
-            ego = spawn_ego(autopilot=True, spawn_point=experiment.spawn_transform)
+            ego = spawn_ego(autopilot=True, spawn_point=experiment.spawn_transform, filter="vehicle.tesla.model3")
             setup_traffic_manager(session.traffic_manager, ego, experiment.turns)
 
             for camera_rig in experiment.camera_rigs:

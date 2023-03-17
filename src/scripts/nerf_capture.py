@@ -43,13 +43,13 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
         # Store image every n-th tick
         if image_tick % ticks_per_image == 0:
             # Store the image at a given path
-            transform_file.append_frame(image, carla_to_nerf(camera.actor.get_transform()))
+            transform_file.append_frame(image, camera.actor.get_transform())
 
         cv2.imshow(window_title, image)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    
+
         image_tick += 1
 
     cv2.destroyWindow(window_title)

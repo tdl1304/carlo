@@ -21,17 +21,18 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     # camera = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.7), carla.Rotation(pitch=-15)), settings=camera_settings)
     # camera_queue = camera.add_numpy_queue()
 
-    camera_right = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.7), carla.Rotation(yaw=30)), settings=camera_settings)
+    camera_right = Camera(parent=ego, transform=carla.Transform(
+        carla.Location(z=2.7), carla.Rotation(yaw=30)), settings=camera_settings)
     camera_right_queue = camera_right.add_numpy_queue()
-    
-    camera_left = Camera(parent=ego, transform=carla.Transform(carla.Location(z=2.7), carla.Rotation(yaw=-30)), settings=camera_settings)
+
+    camera_left = Camera(parent=ego, transform=carla.Transform(carla.Location(
+        z=12.7), carla.Rotation(yaw=0, pitch=-90)), settings=camera_settings)
     camera_left_queue = camera_left.add_numpy_queue()
 
     # camera.start()
     camera_right.start()
     camera_left.start()
 
-    
     timer_iter = Timer()
     window_title = 'Camera'
     cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
@@ -59,14 +60,14 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
 
         # Store image every n-th tick
         if image_tick % ticks_per_image == 0:
-            transform_file.append_frame(image_left, carla_to_nerf(camera_left.actor))
-            transform_file.append_frame(image_right, carla_to_nerf(camera_right.actor))
+            transform_file.append_frame(image_left, camera_left.actor.get_transform())
+            transform_file.append_frame(image_right, camera_right.actor.get_transform())
 
         cv2.imshow(window_title, image)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    
+
         image_tick += 1
 
     cv2.destroyWindow(window_title)
