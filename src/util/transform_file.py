@@ -3,28 +3,33 @@ import math
 import os
 from pathlib import Path
 import cv2
+import carla
 import numpy as np
 
 from datetime import datetime
+
+from src.util.carla_to_nerf import carla_to_nerf
+
 
 class TransformFile:
     def __init__(self, output_dir=None) -> None:
         self.frames = []
         self.intrinsics = {}
         self.count = 0
-        
+
         root_path = Path(os.curdir)
         if output_dir is not None:
             self.output_dir = root_path / output_dir
         else:
             dt = datetime.now()
             self.output_dir = root_path / "runs" / str(int(datetime.timestamp(dt)))
-        
+
         self.output_dir.mkdir(exist_ok=True, parents=True)
         self.image_dir = self.output_dir / 'images'
         self.image_dir.mkdir(exist_ok=True, parents=True)
 
-    def append_frame(self, image: np.ndarray, transform: list(list(float))):
+    def append_frame(self, image: np.ndarray, transform: carla.Transform):
+
         # Save the image to output
         file_path = str(self.image_dir / f'{self.count:04d}.png')
         cv2.imwrite(file_path, image)
@@ -32,7 +37,7 @@ class TransformFile:
 
         self.frames.append({
             'file_path': f'images/{file_path.split("/")[-1]}',
-            'transform_matrix': transform
+            'transform_matrix': carla_to_nerf(transform)
         })
 
     def compute_intrinsics(self, image_size_x, image_size_y, fov):

@@ -11,13 +11,14 @@ def spawn_vehicles(
     count: int,
     filter: str = 'vehicle.*',
     retries: int = 10,
-    autopilot: bool = False
+    autopilot: bool = False,
+    spawn_point: carla.Transform = None
 ) -> List[carla.Vehicle]:
     """Spawn vehicles at random spawn points."""
     actors: List[carla.Vehicle] = []
     spawn_points = session.map.get_spawn_points()
     while len(actors) < count:
-        spawn_point = random.choice(spawn_points)
+        spawn_point = spawn_point or random.choice(spawn_points)
         blueprint = random.choice(session.blueprints.filter(filter))
         actor = session.world.try_spawn_actor(blueprint, spawn_point)
         if actor:
@@ -34,8 +35,9 @@ def spawn_vehicles(
 
 def spawn_ego(
     filter: str = 'vehicle.*',
-    autopilot: bool = False
+    autopilot: bool = False,
+    spawn_point: carla.Transform = None
 ) -> carla.Vehicle:
     """Spawn ego vehicle at random spawn point."""
-    ego, = spawn_vehicles(1, filter, retries=-1, autopilot=autopilot)
+    ego, = spawn_vehicles(1, filter, retries=-1, autopilot=autopilot, spawn_point=spawn_point)
     return ego

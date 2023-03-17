@@ -274,19 +274,17 @@ css = ["tinycss2 (>=1.1.0,<1.2)"]
 
 [[package]]
 name = "carla"
-version = "0.9.13"
+version = "0.9.14"
 description = "Python API for communicating with the CARLA server."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "carla-0.9.13-cp27-cp27mu-manylinux_2_27_x86_64.whl", hash = "sha256:339fcb1e392f3ade1be82b7258de19c533e2efae111e954a6eb174efb296903d"},
-    {file = "carla-0.9.13-cp36-cp36m-manylinux_2_27_x86_64.whl", hash = "sha256:5f065825ce812343bf27a80a19d647b3200b31b44a9e80cea0340e3bd20cdf81"},
-    {file = "carla-0.9.13-cp36-cp36m-win_amd64.whl", hash = "sha256:1210cce213e968a644effd4e2e48458a072481459d073424b05725056ba3d77d"},
-    {file = "carla-0.9.13-cp37-cp37m-manylinux_2_27_x86_64.whl", hash = "sha256:a95d2d4218ea388c863c66b7c2ab3fe49ffefe53999305cfcb6a8107042f79af"},
-    {file = "carla-0.9.13-cp37-cp37m-win_amd64.whl", hash = "sha256:954ca34d5bdd4516ceca353db907fee8cec6630d6b31a732b17dd1554e0f0f94"},
-    {file = "carla-0.9.13-cp38-cp38-manylinux_2_27_x86_64.whl", hash = "sha256:d2bfaea2d6824a2d758cbe813856c69420494f5c97d2a2dfb45653ccf976f1ce"},
-    {file = "carla-0.9.13-cp38-cp38-win_amd64.whl", hash = "sha256:a64ee78fe91137fa7d4828c7fc06d5824bd7312e29e4ea4f31a5d74dd28bff40"},
+    {file = "carla-0.9.14-cp27-cp27mu-manylinux_2_27_x86_64.whl", hash = "sha256:a99f945f7a45ffa2283d6f9b874a481af851ef080847a1243edc0e9c8f1325c3"},
+    {file = "carla-0.9.14-cp37-cp37m-manylinux_2_27_x86_64.whl", hash = "sha256:8f8125eb71b609d8482390079f08974a4ba744f1713e7ee0d934d0f3fb0edafc"},
+    {file = "carla-0.9.14-cp37-cp37m-win_amd64.whl", hash = "sha256:80c8261cb186c791ebc05972ce3cf1e148a159d0694f90ff2e6f35ce5d34e43a"},
+    {file = "carla-0.9.14-cp38-cp38-manylinux_2_27_x86_64.whl", hash = "sha256:3ec1e3d64190ebe90314e41f8fe948944354890027667c4400bb88d6dd1f558a"},
+    {file = "carla-0.9.14-cp38-cp38-win_amd64.whl", hash = "sha256:c57a5ff0f528d2001ea56fe89ccaa4caf1103ed7fdf614eeeff087f2de51db3b"},
 ]
 
 [[package]]
@@ -3097,4 +3095,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "e8645e83a799f0020fb6752563df76603bc046ae69e6ae474e0255a06d9fb930"
+content-hash = "162916989f348ffc420893dae79b1e523e2f0d99dabe779e4b2ecd8c2c6c5701"
