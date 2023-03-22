@@ -54,10 +54,10 @@ class TransformFile:
         # "p1": 0.00010041156063693768,
         # "p2": -0.0007499095300458892,
 
-        computed_fov = math.tan(fov / 2)
-        # # Potensielt image_size_x / 2, ev. bruk cx, cy
-        fl_x = (0.5 * image_size_x) / computed_fov
-        fl_y = (0.5 * image_size_y) / computed_fov
+        # The FOV is the horizontal FOV. Should equal 1 if fov is 90
+        computed_focal_length = math.tan(math.radians(fov / 2))
+        fl_x = (0.5 * image_size_x) / computed_focal_length
+        fl_y = (0.5 * image_size_y) / computed_focal_length
         return {
             "camera_model": "OPENCV",
             "fl_x": fl_x,
