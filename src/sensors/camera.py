@@ -31,3 +31,6 @@ class Camera(SensorBase[carla.Image, CameraSettings]):
             return data
 
         return self.add_queue(transform=transform)
+    
+    def __str__(self) -> str:
+        return super().__str__() + f", settings={self.settings}"

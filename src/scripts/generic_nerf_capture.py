@@ -9,6 +9,8 @@ from src.common.session import Session
 from src.common.spawn import spawn_ego
 from src.experiments import experiments
 from src.experiments.experiment_settings import Experiment
+from src.util.confirm_overwrite import confirm_path_overwrite
+from src.util.create_slurm_script import create_slurm_script
 from src.util.timer import Timer
 from src.util.transform_file import TransformFile
 
@@ -35,12 +37,24 @@ def should_stop(next_action, stop_next_straight, distance_traveled, stop_distanc
     return False
 
 
+
 def run_session(experiment: Experiment):
 
     # Create directory for experiment
     root_path = Path(os.curdir)
     experiment_path = root_path / "runs" / experiment.experiment_name
     os.makedirs(experiment_path, exist_ok=True)
+
+    # Save the experiment settings to the experiment directory
+    settings_path = experiment_path / "experiment_settings.txt"
+    confirm_path_overwrite(settings_path)
+    with open(settings_path, "w") as f:
+        f.write(str(experiment))
+        print(f"✅ Saved experiment settings to {experiment_path / 'experiment_settings.txt'}")
+
+    # Create a slurm script for the experiment
+    create_slurm_script(carlo_data_dir=experiment_path,
+                        input_data_dir=f"../carlo/{experiment_path}", output_dir=f"../carlo/{experiment_path}", experiment_name=experiment.experiment_name)
 
     with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
 
@@ -114,4 +128,5 @@ def run_session(experiment: Experiment):
         cv2.destroyWindow(window_title)
 
 
-run_session(experiments.experiment_2)
+experiment = experiments.experiment_6
+run_session(experiment)

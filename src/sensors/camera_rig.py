@@ -31,3 +31,9 @@ class CameraRig:
         image = self.camera_queue.get()
         self.previous_image = image
         return image
+
+    def __str__(self) -> str:
+        return f"CameraRig(transform={self.transform}, camera_settings={self.camera_settings})"
+    
+    def __repr__(self) -> str:
+        return self.__str__()
