@@ -44,7 +44,7 @@ conda info
 ./nerf_carla_pipeline.py --model nerfacto --input_data {input_data_dir} --output_dir {output_dir}
     """
 
-    slurm_script_path = carlo_data_dir / f"slurm_{experiment_name}.slurm"
+    slurm_script_path = carlo_data_dir / f"job.slurm"
     confirm_path_overwrite(slurm_script_path)
     with open(slurm_script_path, "w+") as f:
         f.write(slurm_script)

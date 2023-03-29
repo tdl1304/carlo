@@ -4,7 +4,7 @@ import carla
 
 
 class CameraRig:
-    base_camera_settings = CameraSettings(image_size_x=400, image_size_y=300, fov=90)
+    base_camera_settings = CameraSettings(image_size_x=600, image_size_y=450, fov=90)
     base_rotation = carla.Rotation(yaw=0, pitch=0, roll=0)
     base_location = carla.Location(z=3.0)
     base_transform = carla.Transform(base_location, base_rotation)

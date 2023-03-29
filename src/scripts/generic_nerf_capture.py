@@ -8,21 +8,21 @@ import carla
 from src.common.session import Session
 from src.common.spawn import spawn_ego
 from src.experiments import experiments
-from src.experiments.experiment_settings import Experiment
+from src.experiments.experiment_settings import Experiment, GaussianNoise
 from src.util.confirm_overwrite import confirm_path_overwrite
 from src.util.create_slurm_script import create_slurm_script
 from src.util.timer import Timer
 from src.util.transform_file import TransformFile
 
 
-def setup_traffic_manager(traffic_manager: carla.TrafficManager, ego: carla.Actor, turns: int):
+def setup_traffic_manager(traffic_manager: carla.TrafficManager, ego: carla.Actor, turns: int, percentage_speed_difference: int):
     traffic_manager.ignore_lights_percentage(ego, 100)  # Ignore traffic lights 100% of the time
     traffic_manager.set_route(ego, ["Left"] * turns)
+    traffic_manager.vehicle_percentage_speed_difference(
+        ego, percentage_speed_difference)  # 100% slower than speed limit
 
 
 def get_distance_traveled(prev_location, current_location):
-    print(f"prev_location: {prev_location}")
-    print(f"current_location: {current_location}")
     return np.sqrt((current_location.x - prev_location.x)**2 + (current_location.y - prev_location.y)**2 + (current_location.z - prev_location.z)**2)
 
 
@@ -31,12 +31,20 @@ def should_stop(next_action, stop_next_straight, distance_traveled, stop_distanc
     if next_action == "LaneFollow" and stop_next_straight:
         return True
 
-    if distance_traveled >= stop_distance:
+    if stop_distance is not None and distance_traveled >= stop_distance:
         return True
 
     return False
 
 
+def apply_noise(transform: carla.Transform, noise: GaussianNoise):
+    print(f"Applying noise to transform: {transform.location}")
+    transform.location.x += np.random.normal(noise.mean, noise.std)
+    transform.location.y += np.random.normal(noise.mean, noise.std)
+    transform.location.z += np.random.normal(noise.mean, noise.std)
+
+    print(f"Applied noise to transform: {transform.location}")
+    return transform
 
 def run_session(experiment: Experiment):
 
@@ -61,7 +69,7 @@ def run_session(experiment: Experiment):
         # Run all the experiments in the same session.
         for index, run in enumerate(experiment.experiments):
             ego = spawn_ego(autopilot=True, spawn_point=run.spawn_transform, filter="vehicle.tesla.model3")
-            setup_traffic_manager(session.traffic_manager, ego, run.turns)
+            setup_traffic_manager(session.traffic_manager, ego, run.turns, run.percentage_speed_difference)
 
             image_tick = 0
             ticks_per_image = run.ticks_per_image
@@ -101,8 +109,9 @@ def run_session(experiment: Experiment):
                 # Store image and update distance traveled every n-th tick.
                 if image_tick % ticks_per_image == 0:
                     for camera_rig in run.camera_rigs:
-                        transform_file.append_frame(camera_rig.previous_image,
-                                                    camera_rig.camera.actor.get_transform())
+                        transform = camera_rig.camera.actor.get_transform()
+                        transform = transform if run.location_noise is None else apply_noise(transform, run.location_noise)
+                        transform_file.append_frame(camera_rig.previous_image, transform)
 
                     current_location = ego.get_location()
                     distance_traveled += get_distance_traveled(prev_location, current_location)
@@ -122,11 +131,11 @@ def run_session(experiment: Experiment):
 
                 image_tick += 1
 
-            print("\n\nNEXT EXPERIMENT\n\n")
             transform_file.export_transforms()
+            print("\n\nNEXT EXPERIMENT\n\n")
 
         cv2.destroyWindow(window_title)
 
 
-experiment = experiments.experiment_6
+experiment = experiments.experiment_11
 run_session(experiment)

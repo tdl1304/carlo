@@ -1,13 +1,25 @@
 from dataclasses import dataclass
 from typing import List
-from src.experiments.experiment_settings import Experiment, ExperimentSettings
+from src.experiments.experiment_settings import Experiment, ExperimentSettings, GaussianNoise
 from src.sensors.camera import CameraSettings
 from src.sensors.camera_rig import CameraRig
 import carla
 
 overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotation(pitch=-90))
+base_camera_rig = [
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
+]
 
-# Create a comment-block saying "EXPERIMENT 1"
+experiment_test = Experiment(
+    experiment_name='exp_test',
+    experiments=[
+        ExperimentSettings(
+            stop_distance=100,
+            camera_rigs=base_camera_rig
+        ),
+    ]
+)
 
 ##############################################
 # Experiment 1: Camera-setup
@@ -15,7 +27,7 @@ overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotati
 
 
 experiment_1 = Experiment(
-    experiment_name='exp_camera_setup_1',
+    experiment_name='exp_camera_setup',
     experiments=[
         ExperimentSettings(
             stop_distance=125,
@@ -69,81 +81,39 @@ experiment_1 = Experiment(
 ##############################################
 
 experiment_2 = Experiment(
+    experiment_name='exp_capacity',
     experiments=[
         ExperimentSettings(
             stop_distance=50,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
-            ]
+            camera_rigs=base_camera_rig
         ),
         ExperimentSettings(
             stop_distance=100,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
-            ]
+            camera_rigs=base_camera_rig
         ),
         ExperimentSettings(
-            stop_distance=200,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
-            ]
+            turns=1,
+            camera_rigs=base_camera_rig
         ),
         ExperimentSettings(
-            stop_distance=400,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
-            ]
+            turns=2,
+            camera_rigs=base_camera_rig
         ),
-        ExperimentSettings(
-            stop_distance=800,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
-            ]
-        ),
+        # One lap
         ExperimentSettings(
             turns=3,
-            stop_distance=5000,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
-            ]
+            camera_rigs=base_camera_rig
         ),
-
+        # Two laps
+        ExperimentSettings(
+            turns=6,
+            camera_rigs=base_camera_rig
+        ),
     ],
-    experiment_name='exp_capacity_1'
 )
 
 ##############################################
-# Experiment 3: Test
-##############################################
-
-experiment_3 = Experiment(
-    experiments=[
-        ExperimentSettings(
-            stop_distance=50,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-60))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=60))),
-            ]
-        ),
-        ExperimentSettings(
-            stop_distance=100,
-            camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-60))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=60))),
-            ]
-        ),
-    ],
-    experiment_name='exp_test'
-)
-
-##############################################
-# Experiment 4: Camera settings
+# Experiment 3: Camera settings - image size
 ##############################################
 
 camera_settings = [
@@ -154,7 +124,8 @@ camera_settings = [
     CameraSettings(image_size_x=1600, image_size_y=1200, fov=90),
 ]
 
-experiment_4 = Experiment(
+experiment_3 = Experiment(
+    experiment_name='exp_image_size',
     experiments=[
         ExperimentSettings(
             stop_distance=100,
@@ -201,8 +172,7 @@ experiment_4 = Experiment(
                                                     carla.Rotation(yaw=30)),  camera_settings=camera_settings[4]),
             ]
         ),
-    ],
-    experiment_name='exp_image_size'
+    ]
 )
 
 ##############################################
@@ -245,8 +215,49 @@ experiment_5 = Experiment(
     experiment_name="exp_full_lap",
     experiments=[
         ExperimentSettings(
-            stop_distance=2000,
-            turns=3,
+            camera_rigs=base_camera_rig
+        ),
+    ],
+)
+
+##############################################
+# Experiment 7: Change the speed of the car
+##############################################
+
+experiment_7 = Experiment(
+    experiment_name="exp_speed",
+    experiments=[
+        # 50% below speed-limit
+        ExperimentSettings(
+            turns=1,
+            percentage_speed_difference=50,
+            camera_rigs=[
+                    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
+                    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
+            ]
+        ),
+        # Speed-limit
+        ExperimentSettings(
+            turns=1,
+            percentage_speed_difference=0,
+            camera_rigs=[
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
+            ]
+        ),
+        # 50% above speed-limit
+        ExperimentSettings(
+            turns=1,
+            percentage_speed_difference=-50,
+            camera_rigs=[
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
+            ]
+        ),
+        # 100% above speed-limit
+        ExperimentSettings(
+            turns=1,
+            percentage_speed_difference=-100,
             camera_rigs=[
                 CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
                 CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
@@ -256,19 +267,142 @@ experiment_5 = Experiment(
 )
 
 ##############################################
-# Experiment 6: Can COLMAP handle two full laps?
+# Experiment 8: Number of frames
 ##############################################
 
-experiment_6 = Experiment(
-    experiment_name="exp_two_full_laps",
+experiment_8 = Experiment(
+    experiment_name="exp_frames_5",
     experiments=[
         ExperimentSettings(
-            stop_distance=2000,
-            turns=6,
+            ticks_per_image=1,
+            camera_rigs=base_camera_rig
+        ),
+        ExperimentSettings(
+            ticks_per_image=2,
+            camera_rigs=base_camera_rig
+        ),
+        ExperimentSettings(
+            ticks_per_image=3,
+            camera_rigs=base_camera_rig
+        ),
+        ExperimentSettings(
+            ticks_per_image=4,
+            camera_rigs=base_camera_rig
+        ),
+        ExperimentSettings(
+            ticks_per_image=5,
+            camera_rigs=base_camera_rig
+        ),
+    ]
+)
+
+##############################################
+# Experiment 9 and 10: Combined baseline
+##############################################
+
+experiment_9 = Experiment(
+    experiment_name="exp_combined_baseline",
+    experiments=[
+        ExperimentSettings(
+            ticks_per_image=2,
+            percentage_speed_difference=50,
+            turns=1,
             camera_rigs=[
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-                CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=-10)), camera_settings=camera_settings[1]),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=10)), camera_settings=camera_settings[1]),
             ]
         ),
-    ],
+    ]
+)
+
+experiment_10 = Experiment(
+    experiment_name="exp_combined_baseline_2",
+    experiments=[
+        ExperimentSettings(
+            ticks_per_image=2,
+            percentage_speed_difference=50,
+            turns=3,
+            camera_rigs=[
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=-10)), camera_settings=camera_settings[1]),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=10)), camera_settings=camera_settings[1]),
+            ]
+        ),
+    ]
+)
+
+# Based on best settings from previous experiments.
+# Ticks per image is set to 3 instead of 2, in order to reduce the amount of images.
+# The turns are set to 3 instead of 1, in order to complete a full lap
+baseline_experiment_settings = ExperimentSettings(
+    ticks_per_image=3,
+    percentage_speed_difference=50,
+    turns=3,
+    camera_rigs=[
+        CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                            carla.Rotation(yaw=-10)), camera_settings=camera_settings[1]),
+        CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                            carla.Rotation(yaw=10)), camera_settings=camera_settings[1]),
+    ]
+),
+
+##############################################
+# Experiment 11: Gaussian noise to car location. How much Gaussian noise can camera optimization handle?
+##############################################
+
+experiment_11 = Experiment(
+    experiment_name="exp_gaussian_noise",
+    experiments=[
+        ExperimentSettings(
+            ticks_per_image=3,
+            percentage_speed_difference=50,
+            turns=3,
+            location_noise=None,
+            camera_rigs=[
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=-10)), camera_settings=camera_settings[1]),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=10)), camera_settings=camera_settings[1]),
+            ]
+        ),
+        ExperimentSettings(
+            ticks_per_image=3,
+            percentage_speed_difference=50,
+            turns=3,
+            location_noise=GaussianNoise(mean=0, std=0.5),  # 0.3 meters
+            camera_rigs=[
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=-10)), camera_settings=camera_settings[1]),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=10)), camera_settings=camera_settings[1]),
+            ]
+        ),
+        ExperimentSettings(
+            ticks_per_image=3,
+            percentage_speed_difference=50,
+            turns=3,
+            location_noise=GaussianNoise(mean=0, std=1),  # 0.3 meters
+            camera_rigs=[
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=-10)), camera_settings=camera_settings[1]),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=10)), camera_settings=camera_settings[1]),
+            ]
+        ),
+        ExperimentSettings(
+            ticks_per_image=3,
+            percentage_speed_difference=50,
+            turns=3,
+            location_noise=GaussianNoise(mean=0, std=3),  # 0.3 meters
+            camera_rigs=[
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=-10)), camera_settings=camera_settings[1]),
+                CameraRig(transform=carla.Transform(carla.Location(z=3.0),
+                                                    carla.Rotation(yaw=10)), camera_settings=camera_settings[1]),
+            ]
+        ),
+    ]
 )
