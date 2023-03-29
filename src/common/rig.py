@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from typing import List, Union, Any
+from typing import List, Optional, Union, Any
 
 
 class FThetaProperties(BaseModel):
@@ -57,7 +57,7 @@ class Sensor(BaseModel):
     name: str
     nominal_sensor_2_rig: NominalSensor2Rig = Field(..., alias="nominalSensor2Rig_FLU")
     parameter: str
-    properties: Union[FThetaProperties, OcamProperties]
+    properties: Union[None, FThetaProperties, OcamProperties]
     protocol: str
 
     @property
@@ -66,11 +66,21 @@ class Sensor(BaseModel):
 
     @property
     def fov(self) -> int:
-        return 120 if "120" in self.name else 60
-
-    @property
-    def is_rear(self) -> bool:
-        return "rear" in self.name
+        known_fovs = {
+            'C1_front60Single': 60,
+            'C2_tricam60': 60,
+            'C3_tricam120': 120,
+            'C6_L1': 120,
+            'C7_L2': 120,
+            'C5_R1': 120,
+            'C8_R2': 120,
+            'C4_rearCam': 120,
+        }
+        if self.name in known_fovs:
+            return known_fovs[self.name]
+        if '60' in self.name:
+            return 60
+        return 120
 
 
 class Actuation(BaseModel):
@@ -125,8 +135,8 @@ class Vehicle(BaseModel):
 
 class Rig(BaseModel):
     sensors: List[Sensor]
-    vehicle: Vehicle
-    vehicleio: List[Any]
+    vehicle: Optional[Vehicle]
+    vehicleio: Optional[List[Any]]
 
 
 class RigFile(BaseModel):
