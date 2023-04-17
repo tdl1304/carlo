@@ -135,8 +135,8 @@ class Vehicle(BaseModel):
 
 class Rig(BaseModel):
     sensors: List[Sensor]
-    vehicle: Optional[Vehicle]
-    vehicleio: Optional[List[Any]]
+    # vehicle: Optional[Vehicle]
+    # vehicleio: Optional[List[Any]]
 
 
 class RigFile(BaseModel):
