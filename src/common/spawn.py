@@ -19,6 +19,8 @@ def spawn_vehicles(
     spawn_points = session.map.get_spawn_points()
     while len(actors) < count:
         spawn_point = spawn_point or random.choice(spawn_points)
+        print(f"List of session blueprints: {session.blueprints}")
+        print(f"Filter: {filter}")
         blueprint = random.choice(session.blueprints.filter(filter))
         actor = session.world.try_spawn_actor(blueprint, spawn_point)
         if actor:

@@ -1,6 +1,7 @@
-from numpy import ndarray
+import numpy as np
 from src.sensors.camera import Camera, CameraSettings
 import carla
+from queue import Queue
 
 
 class CameraRig:
@@ -16,18 +17,26 @@ class CameraRig:
         self.camera_queue = None
         self.previous_image = None
 
-    def create_camera(self, parent: carla.Actor) -> Camera:
+    def create_camera(self, parent: carla.Actor) -> 'CameraRig':
         self.camera = Camera(parent=parent, transform=self.transform, settings=self.camera_settings)
         self.camera_queue = self.camera.add_numpy_queue()
         self.camera.start()
+        return self
 
     def get_camera_settings(self) -> CameraSettings:
         return self.camera_settings
 
-    def get_camera(self, parent: carla.Actor) -> Camera:
-        return Camera(parent=parent, transform=self.transform, settings=self.camera_settings)
+    def get_camera(self) -> Camera:
+        if self.camera is None:
+            raise Exception("Camera not created yet")
+        return self.camera
+    
+    def get_camera_queue(self) -> 'Queue[np.ndarray]':
+        if self.camera_queue is None:
+            raise Exception("Camera not created yet")
+        return self.camera_queue
 
-    def get_image(self) -> ndarray:
+    def get_image(self) -> np.ndarray:
         image = self.camera_queue.get()
         self.previous_image = image
         return image

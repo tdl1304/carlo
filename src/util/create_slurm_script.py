@@ -2,7 +2,7 @@
 from src.util.confirm_overwrite import confirm_path_overwrite
 
 
-def create_slurm_script(carlo_data_dir, input_data_dir, output_dir, experiment_name):
+def create_slurm_script(carlo_data_dir, input_data_dir, output_dir, experiment_name, extra_args="", script_name="job.slurm"):
     # Create a slurm script
     slurm_script = f"""#!/usr/bin/bash
 
@@ -40,11 +40,14 @@ conda info
 conda activate nerfstudio
 conda info
 
+# Load FFMPEG
+module load FFmpeg/4.4.2-GCCcore-11.3.0
+
 # Run training
-./nerf_carla_pipeline.py --model nerfacto --input_data {input_data_dir} --output_dir {output_dir}
+./nerf_carla_pipeline.py --model nerfacto --input_data {input_data_dir} --output_dir {output_dir} {extra_args}
     """
 
-    slurm_script_path = carlo_data_dir / f"job.slurm"
+    slurm_script_path = carlo_data_dir / script_name
     confirm_path_overwrite(slurm_script_path)
     with open(slurm_script_path, "w+") as f:
         f.write(slurm_script)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 import carla
 
 from src.sensors.camera_rig import CameraRig
@@ -12,7 +12,8 @@ class GaussianNoise:
 
 @dataclass
 class ExperimentSettings:
-    camera_rigs: List[CameraRig]
+    camera_rigs: Optional[List[CameraRig]] = None
+    rig_file_path: Optional[str] = None
     ticks_per_image: int = 3
     turns: int = 3 # Equivalent to one lap around the block
     stop_distance: Optional[int] = None
@@ -20,6 +21,7 @@ class ExperimentSettings:
     location_noise: Optional[GaussianNoise] = None
     spawn_transform: carla.Transform = carla.Transform(carla.Location(x=106.386559, y=-2.362594, z=0.5),
                                                        carla.Rotation(pitch=0, yaw=-90, roll=0))
+    path: Literal["left-loop", "city-wander"] = "left-loop"
 
 @dataclass
 class Experiment:

@@ -1,3 +1,4 @@
+import fnmatch
 import json
 from pathlib import Path
 import sys
@@ -13,15 +14,16 @@ def read_json_results(json_file: Path):
         results = json.load(f)
     return results
 
+
 def highlight_df(df):
     def highlight_max(s):
         is_max = s == s.max()
-        return ['background-color: lightgreen' if v else '' for v in is_max]
+        return ['background-color: green' if v else '' for v in is_max]
 
     def highlight_min(s):
         is_min = s == s.min()
         return ['background-color: red' if v else '' for v in is_min]
-    
+
     # Apply the highlight function to the 'psnr', 'ssim', and 'lpips' columns
     styled_df = df.style.apply(highlight_max, subset=['psnr', 'ssim', 'lpips'])
     styled_df = styled_df.apply(highlight_min, subset=['psnr', 'ssim', 'lpips'])
@@ -29,12 +31,37 @@ def highlight_df(df):
     # Display the styled DataFrame
     return styled_df
 
+
+def highlight_df_in_latex(df):
+    def highlight_max(s):
+        is_max = s == s.max()
+        return ['\\cellcolor{green!25}' if v else '' for v in is_max]
+
+    def highlight_min(s):
+        is_min = s == s.min()
+        return ['\\cellcolor{red!25}' if v else '' for v in is_min]
+
+    # Apply the highlight function to the 'psnr', 'ssim', and 'lpips' columns
+    styled_df = df.style.apply(highlight_max, subset=['psnr', 'ssim', 'lpips'])
+    styled_df = styled_df.apply(highlight_min, subset=['psnr', 'ssim', 'lpips'])
+
+    # Display the styled DataFrame
+    return styled_df
+
+
 def save_html_render(styled_df, save_path: Path):
     """
         Save the html render of the styled DataFrame.
     """
     with open(save_path, "w") as f:
         f.write(styled_df.render())
+
+def save_latex_render(styled_df, save_path: Path):
+    """
+        Save the latex render of the styled DataFrame.
+    """
+    with open(save_path, "w") as f:
+        f.write(styled_df)
 
 
 def compare_exp_res(exp_path: Path):
@@ -44,10 +71,11 @@ def compare_exp_res(exp_path: Path):
     eval_files = []
 
     # Loop the exp_path and find all directories
+    ignore_dirs = ["images*", "renders", "camera_paths"]
     for exp_dir in exp_path.iterdir():
-        if exp_dir.is_dir():
+        if exp_dir.is_dir() and not any(fnmatch.fnmatch(exp_dir.name, ignore_dir) for ignore_dir in ignore_dirs):
             eval_dir = exp_dir
-            temp_eval_files = list(eval_dir.glob("exp*.json"))
+            temp_eval_files = list(eval_dir.glob("**/eval.json"))
             if len(temp_eval_files) == 0:
                 print(f"No eval file found in {eval_dir}")
                 return
@@ -67,11 +95,22 @@ def compare_exp_res(exp_path: Path):
 
     df = pd.DataFrame(json_files)
     sorted_df = df.sort_values(by='exp_name', ascending=True).reset_index(drop=True)
-    print(sorted_df)
+    sorted_df = sorted_df[['psnr', 'ssim', 'lpips']]
+    sorted_df.insert(0, "description", sorted_df.index)
+    sorted_df = sorted_df.replace("_", "\_", regex=True)
 
-    # Render and save the HTML
     styled_df = highlight_df(sorted_df)
-    save_html_render(styled_df, exp_path / "results.html")
+    styled_df = styled_df.to_latex(
+        convert_css=True,
+        position_float="centering",
+        multicol_align="c",
+        hrules=True,
+        clines="all;data",
+        label=f"tab:{df['exp_name'][0]}",
+        caption=f"Results for {df['exp_name'][0]}",
+        column_format=f"|l{'|c'*len(sorted_df.columns)}|")
+
+    save_latex_render(styled_df, exp_path / "latex_table.tex")
 
 
 if __name__ == "__main__":

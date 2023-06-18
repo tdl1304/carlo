@@ -8,10 +8,11 @@ import carla
 import cv2
 import numpy as np
 
-from src.common.rig import parse_rig_json
+from src.common.rig import Rig, Sensor, parse_rig_json
 from src.common.session import Session
 from src.common.spawn import spawn_ego, spawn_vehicles
-from src.sensors.camera import Camera
+from src.sensors.camera import Camera, CameraSettings
+from src.sensors.camera_rig import CameraRig
 from src.sensors.lidar import Lidar
 from src.util.timer import Timer
 from src.util.vehicle import get_back_axle_position
@@ -64,9 +65,11 @@ def lidar_to_img(lidar, yt):
     return 255 - img
 
 
+
 with Session() as session:
-    vehicles = spawn_vehicles(50, autopilot=True)
+    # vehicles = spawn_vehicles(50, autopilot=True)
     ego = spawn_ego(autopilot=True, filter="vehicle.*")
+    # ego = spawn_ego(autopilot=True, filter="vehicle.kia.*")
     print(f"Ego: {ego}")
 
     session.world.tick()
@@ -92,29 +95,15 @@ with Session() as session:
     cameras = list(filter(lambda sensor: sensor.is_camera, rig.sensors))
     lidars = {sensor.name: sensor for sensor in rig.sensors if sensor.name == 'lidar:top'}
 
-    def make_sensor_transform(sensor):
-        return carla.Transform(
-            carla.Location(
-                x=sensor.nominal_sensor_2_rig.x,
-                y=-sensor.nominal_sensor_2_rig.y,
-                z=sensor.nominal_sensor_2_rig.z,
-            ) + sensor_offset,
-            carla.Rotation(
-                pitch=sensor.nominal_sensor_2_rig.pitch,
-                yaw=-sensor.nominal_sensor_2_rig.yaw,
-                roll=sensor.nominal_sensor_2_rig.roll,
-            ),
-        )
 
+    
     for sensor in cameras:
-        camera = Camera(parent=ego, transform=make_sensor_transform(sensor), settings={
-                        "fov": sensor.fov,
-                        "image_size_x": sensor.properties.width // scale,
-                        "image_size_y": sensor.properties.height // scale
-                        })
-        camera_queue = camera.add_numpy_queue()
-        camera.start()
-        camera_queues[sensor.name] = camera_queue
+        camera_rig = CameraRig(transform=make_sensor_transform(sensor), settings=CameraSettings(
+            fov=sensor.fov,
+            image_size_x=sensor.properties.width // scale,
+            image_size_y=sensor.properties.height // scale,
+        ))
+        camera_rig.create_camera(ego)
 
     for name, sensor in lidars.items():
             lidar = Lidar(parent=ego, transform=make_sensor_transform(sensor), settings={
@@ -124,8 +113,6 @@ with Session() as session:
             lidar.start()
             lidar_queues[name] = lidar_queue
 
-    timer_iter = Timer()
-
     window_title = "Camera"
     cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
 
@@ -134,9 +121,14 @@ with Session() as session:
                           cameras[0].properties.width // scale // 2, 4), np.uint8)
 
     while True:
-        timer_iter.tick("dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz")
         session.world.tick()
 
+
+        
+        
+        
+        
+        # ! SHOW IMAGES
         # show the front cameras at the top row
         cam_data = {name: camera_queue.get() for name, camera_queue in camera_queues.items()}
         lidar_data = {name: lidar_queue.get() for name, lidar_queue in lidar_queues.items()}
@@ -157,6 +149,7 @@ with Session() as session:
         im = np.concatenate([im_top, im_mid, im_bot], axis=0)
 
         cv2.imshow(window_title, im)
+        # ! SHOW IMAGES
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
