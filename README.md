@@ -30,8 +30,13 @@ validate installation
 ```sh
 poetry --version
 ```
-install packages
+
+### Carla dependency only works with python 3.8
+Therefore install [python 3.8](https://linuxize.com/post/how-to-install-python-3-8-on-ubuntu-18-04/?utm_content=cmp-true)
+
+Then run
 ```sh
+poetry env use 3.8
 poetry shell
 poetry install
 ```
