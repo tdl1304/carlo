@@ -2,7 +2,41 @@
 
 ![credits to Stable Diffusion](media/logo-1.png)
 
-Install requirements first, then run with
+Install requirements first:  
+
+### Install carla
+[Link](https://carla.readthedocs.io/en/latest/start_quickstart/)
+
+add alias for carla:  
+alias carla='/path/to/carla/CarlaUE4.sh'
+
+### Install poetry  
+```sh
+curl -sSL https://install.python-poetry.org | python3 -
+```
+add to PATH permanentaly with
+```sh
+vi ~/.bashrc
+```
+then add this to .bashrc file
+```sh
+export PATH="/home/$USER/.local/bin:$PATH"
+```
+update poetry
+```sh
+poetry self update
+```
+validate installation
+```sh
+poetry --version
+```
+install packages
+```sh
+poetry shell
+poetry install
+```
+
+### Run data collection with
 
 ```sh
 python -m src.scripts.sicko
