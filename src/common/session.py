@@ -1,6 +1,8 @@
 import os
 import sys
 from typing import Optional, Tuple, cast
+import numpy as np
+import random
 
 import carla
 
@@ -57,8 +59,9 @@ class Session:
         if not self._spectate:
             self._setup_world()
 
-            if self._seed is not None:
-                self._set_seed()
+        print("WARNING SEED IS COMMENTED OUT")
+            #if self._seed is not None:
+             #   self._set_seed()
 
         log.info('Session active.')
         session._active = self
@@ -88,7 +91,7 @@ class Session:
         log.info(f'Starting session with {server_host}:{server_port}.')
 
         self.client = carla.Client(server_host, server_port)
-        self.client.set_timeout(10)
+        self.client.set_timeout(10.0)
         self.world = self.client.get_world()
         self.map = self.world.get_map()
         self.blueprints = self.world.get_blueprint_library()
@@ -96,13 +99,10 @@ class Session:
     
     def _set_seed(self):
         log.info('Setting random seed.')
-
-        import random
         random.seed(self._seed)
+        np.random.seed(self._seed)
 
-        import numpy.random
-        numpy.random.seed(self._seed)
-
+        print("setting seed to device")
         self.traffic_manager.set_random_device_seed(self._seed)
     
     def _setup_world(self):
