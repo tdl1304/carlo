@@ -26,7 +26,7 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
     camera_right_queue = camera_right.add_numpy_queue()
 
     camera_left = Camera(parent=ego, transform=carla.Transform(carla.Location(
-        z=12.7), carla.Rotation(yaw=0, pitch=-90)), settings=camera_settings)
+        z=2.7), carla.Rotation(yaw=-30)), settings=camera_settings)
     camera_left_queue = camera_left.add_numpy_queue()
 
     # camera.start()
