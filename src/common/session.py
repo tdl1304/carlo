@@ -1,22 +1,18 @@
 import os
-import sys
-from typing import Optional, Tuple, cast
-import numpy as np
+from typing import Tuple, cast
 import random
-
+import sys
+import time
 import carla
-
 from . import log
-
-
-__all__ = ['session', 'Session']
-
 
 class Session:
     _server: Tuple[str, int]
     _dt: float
     _phys_dt: float
     _phys_substeps: int
+    _seed: int
+    _spectate: bool
 
     client: carla.Client
     world: carla.World
@@ -24,15 +20,7 @@ class Session:
     map: carla.Map
     traffic_manager: carla.TrafficManager
 
-    def __init__(self,
-        server: Tuple[str, int] = (None, None),
-        *,
-        dt: float = 0.1,
-        phys_dt: float = 0.01,
-        phys_substeps: int = 10,
-        seed: int = 0,
-        spectate: bool = False,
-    ):
+    def __init__(self, server: Tuple[str, int] = (None, None), *, dt: float = 0.1, phys_dt: float = 0.01, phys_substeps: int = 10, seed: int = 0, spectate: bool = False):
         self._server = server
         self._dt = dt
         self._phys_dt = phys_dt
@@ -54,17 +42,20 @@ class Session:
         if session._active is not None:
             raise RuntimeError('Session already active')
 
-        self._connect()
+        try:
+            self._connect()
 
-        if not self._spectate:
-            self._setup_world()
+            if self._seed is not None:
+                self._set_seed()
 
-        print("WARNING SEED IS COMMENTED OUT")
-            #if self._seed is not None:
-             #   self._set_seed()
+            if not self._spectate:
+                self._setup_world()
 
-        log.info('Session active.')
-        session._active = self
+            log.info('Session active.')
+            session._active = self
+        except Exception as e:
+            log.err(f'Failed to start the session: {str(e)}')
+
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
@@ -83,8 +74,10 @@ class Session:
         if exc_type is KeyboardInterrupt:
             sys.exit(0)
 
+        self.client = None  # Close the client gracefully
+
     def _connect(self):
-        server_host = self._server[0] or os.environ.get('CARLA_HOST', 'localhost')
+        server_host = self._server[0] or os.environ.get('CARLA_HOST', '127.0.0.1')
         server_port = self._server[1] or int(os.environ.get('CARLA_PORT', '2000'))
         server_traffic_manager_port = int(os.environ.get('CARLA_TM_PORT', '8000'))
 
@@ -100,9 +93,6 @@ class Session:
     def _set_seed(self):
         log.info('Setting random seed.')
         random.seed(self._seed)
-        np.random.seed(self._seed)
-
-        print("setting seed to device")
         self.traffic_manager.set_random_device_seed(self._seed)
     
     def _setup_world(self):
@@ -118,19 +108,20 @@ class Session:
         settings.max_substep_delta_time = self._phys_dt
         settings.max_substeps = self._phys_substeps
         self.world.apply_settings(settings)
-        self.reload_world(False)
+        #self.reload_world(False)
     
     def _teardown_world(self):
         log.info('Cleaning up world.')
 
-        self.reload_world(True)
-
+        #self.reload_world(True)
+        
         settings = self.world.get_settings()
-        settings.no_rendering_mode = True
+        settings.synchronous_mode = False
+        settings.no_rendering_mode = False
+        settings.fixed_delta_seconds = None
         self.world.apply_settings(settings)
-
         self.traffic_manager.set_synchronous_mode(False)
-
+        time.sleep(0.5)
 
 class _SessionProxy:
     """Helper class to allow "reassignment" of the active session
@@ -140,6 +131,5 @@ class _SessionProxy:
 
     def __getattr__(self, key: str):
         return getattr(self._active, key)
-
 
 session: Session = cast(Session, _SessionProxy())
