@@ -9,6 +9,8 @@ Install requirements first:
 
 add alias for carla:  
 alias carla='/path/to/carla/CarlaUE4.sh'
+
+Adjust sensitivity in Carla
 <details>
 <summary>Copy this into carla/CarlaUE4/COnfig/DefaultInput.ini</summary>
 
