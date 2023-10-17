@@ -28,6 +28,9 @@ class Session:
         self._seed = seed
         self._spectate = spectate
     
+    def destroy_actors(self, actors: list):
+        self.client.apply_batch([carla.command.DestroyActor(x) for x in actors])
+    
     def reload_world(self, reset_settings: bool = False):
         """Reloads the current world.
         

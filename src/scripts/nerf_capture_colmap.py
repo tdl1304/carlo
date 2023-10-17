@@ -70,5 +70,7 @@ with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
 
         image_tick += 1
 
+    print("Destroying actors")
+    session.destroy_actors([ego]+vehicles)
     cv2.destroyWindow(window_title)
     transform_file.export_transforms()

@@ -18,9 +18,11 @@ def spawn_vehicles(
     actors: List[carla.Vehicle] = []
     spawn_points = session.map.get_spawn_points()
     while len(actors) < count:
+        print("spawning vehicle")
+        print("actor count: ", len(actors))
         spawn_point = spawn_point or random.choice(spawn_points)
-        print(f"List of session blueprints: {session.blueprints}")
-        print(f"Filter: {filter}")
+        #print(f"List of session blueprints: {session.blueprints}")
+        #print(f"Filter: {filter}")
         blueprint = random.choice(session.blueprints.filter(filter))
         actor = session.world.try_spawn_actor(blueprint, spawn_point)
         if actor:
