@@ -10,6 +10,8 @@ class CameraRig:
     base_location = carla.Location(z=3.0)
     base_transform = carla.Transform(base_location, base_rotation)
 
+    # Constructor
+    # transform: carla.Transform(base_location: carla.Location, base_rotation: carla.Rotation)
     def __init__(self, transform: carla.Transform = base_transform, camera_settings: CameraSettings = base_camera_settings):
         self.transform = transform
         self.camera_settings = camera_settings
