@@ -11,6 +11,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 carla = "0.9.14"
+open3d = "^0.15.2"
 ansicolors = "^1.1.8"
 numpy = "^1.23.4"
 typer = {extras = ["all"], version = "^0.7.0"}
