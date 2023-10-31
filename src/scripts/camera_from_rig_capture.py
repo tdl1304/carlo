@@ -64,6 +64,20 @@ def lidar_to_img(lidar, yt):
     img = np.pad(img, ((0, 0), (0, 0), (1, 1)))
     return 255 - img
 
+def make_sensor_transform(sensor: Sensor) -> carla.Transform:
+        return carla.Transform(
+            carla.Location(
+                x=sensor.nominal_sensor_2_rig.x,
+                y=-sensor.nominal_sensor_2_rig.y,
+                z=sensor.nominal_sensor_2_rig.z,
+            ) + sensor_offset,
+            carla.Rotation(
+                pitch=sensor.nominal_sensor_2_rig.pitch,
+                yaw=-sensor.nominal_sensor_2_rig.yaw,
+                roll=sensor.nominal_sensor_2_rig.roll,
+            ),
+        )
+
 
 
 with Session() as session:
@@ -122,11 +136,6 @@ with Session() as session:
 
     while True:
         session.world.tick()
-
-
-        
-        
-        
         
         # ! SHOW IMAGES
         # show the front cameras at the top row

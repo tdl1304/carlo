@@ -8,13 +8,13 @@ import carla
 import cv2
 import numpy as np
 
-from src.common.rig import parse_rig_json
 from src.common.session import Session
 from src.common.spawn import spawn_ego, spawn_vehicles
 from src.sensors.camera import Camera
 from src.sensors.lidar import Lidar
 from src.util.timer import Timer
 from src.util.vehicle import get_back_axle_position
+from src.common.rig import Rig, Sensor, parse_rig_json
 
 if not len(sys.argv) == 2:
     print(f"Usage: {pathlib.Path(__file__).name} <rig.json>")
@@ -90,9 +90,9 @@ with Session() as session:
     lidar_queues = {}
 
     cameras = list(filter(lambda sensor: sensor.is_camera, rig.sensors))
-    lidars = {sensor.name: sensor for sensor in rig.sensors if sensor.name == 'lidar:top'}
+    #lidars = {sensor.name: sensor for sensor in rig.sensors if sensor.name == 'lidar:top'}
 
-    def make_sensor_transform(sensor):
+    def make_sensor_transform(sensor: Sensor) -> carla.Transform:
         return carla.Transform(
             carla.Location(
                 x=sensor.nominal_sensor_2_rig.x,
@@ -116,13 +116,13 @@ with Session() as session:
         camera.start()
         camera_queues[sensor.name] = camera_queue
 
-    for name, sensor in lidars.items():
-            lidar = Lidar(parent=ego, transform=make_sensor_transform(sensor), settings={
+    # for name, sensor in lidars.items():
+    #         lidar = Lidar(parent=ego, transform=make_sensor_transform(sensor), settings={
 
-            })
-            lidar_queue = lidar.add_numpy_queue()
-            lidar.start()
-            lidar_queues[name] = lidar_queue
+    #         })
+    #         lidar_queue = lidar.add_numpy_queue()
+    #         lidar.start()
+    #         lidar_queues[name] = lidar_queue
 
     timer_iter = Timer()
 
@@ -139,22 +139,22 @@ with Session() as session:
 
         # show the front cameras at the top row
         cam_data = {name: camera_queue.get() for name, camera_queue in camera_queues.items()}
-        lidar_data = {name: lidar_queue.get() for name, lidar_queue in lidar_queues.items()}
+        #lidar_data = {name: lidar_queue.get() for name, lidar_queue in lidar_queues.items()}
 
-        if 'lidar:top' in lidar_data:
-            lidar_img = lidar_to_img(lidar_data['lidar:top'], make_sensor_transform(lidars['lidar:top']).location.z)
-            lidar_img = cv2.resize(lidar_img, (cameras[0].properties.width // scale, cameras[0].properties.height // scale))
-        else:
-            lidar_img = blank
+        # if 'lidar:top' in lidar_data:
+        #     lidar_img = lidar_to_img(lidar_data['lidar:top'], make_sensor_transform(lidars['lidar:top']).location.z)
+        #     lidar_img = cv2.resize(lidar_img, (cameras[0].properties.width // scale, cameras[0].properties.height // scale))
+        # else:
+        #     lidar_img = blank
 
         top_row = [half_blank, cam_data['C1_front60Single'], cam_data['C3_tricam120'], cam_data['C2_tricam60'], half_blank]
         mid_row = [cam_data['C6_L1'], cam_data['C7_L2'], cam_data['C8_R2'], cam_data['C5_R1']]
-        bot_row = [lidar_img, half_blank, cam_data['C4_rearCam'], half_blank, blank]
+        #bot_row = [lidar_img, half_blank, cam_data['C4_rearCam'], half_blank, blank]
 
         im_top = np.concatenate(top_row, axis=1)
         im_mid = np.concatenate(mid_row, axis=1)
-        im_bot = np.concatenate(bot_row, axis=1)
-        im = np.concatenate([im_top, im_mid, im_bot], axis=0)
+        #im_bot = np.concatenate(bot_row, axis=1)
+        im = np.concatenate([im_top, im_mid], axis=0) #, im_bot
 
         cv2.imshow(window_title, im)
 
