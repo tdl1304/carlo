@@ -2,8 +2,6 @@
 
 __pycache__/
 *.py[oc]
-
-typings/carla
 build/
 output/
 .envrc
