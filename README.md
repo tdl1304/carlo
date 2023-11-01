@@ -7,12 +7,17 @@ Install requirements first:
 ### Install carla
 [Link](https://carla.readthedocs.io/en/latest/start_quickstart/)
 
+#### We are using version 0.9.14 at the time of this project
+- Download for Ubuntu via [Link](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
+- Unzip in any location
+- run ./CarlaUE4.sh to run carla server
+
 add alias for carla:  
 alias carla='/path/to/carla/CarlaUE4.sh'
 
 Adjust sensitivity in Carla
 <details>
-<summary>Copy this into carla/CarlaUE4/COnfig/DefaultInput.ini</summary>
+<summary>Copy this into carla/CarlaUE4/Config/DefaultInput.ini</summary>
 
 ```
 [/Script/Engine.InputSettings]
