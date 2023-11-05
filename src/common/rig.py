@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator, validator
 
 from typing import List, Optional, Union, Any
 
@@ -59,7 +59,7 @@ class Sensor(BaseModel):
     parameter: str
     properties: Union[None, FThetaProperties, OcamProperties]
     protocol: str
-
+        
     @property
     def is_camera(self) -> bool:
         return "camera" in self.protocol
@@ -138,11 +138,17 @@ class Rig(BaseModel):
     # vehicle: Optional[Vehicle]
     # vehicleio: Optional[List[Any]]
 
+    @validator("sensors", pre=True, always=True)
+    def filter_items(cls, items: List[Sensor]):
+        filtered = [item for item in items if "camera" in item["protocol"]]
+        return filtered
+
 
 class RigFile(BaseModel):
     rig: Rig
     version: int
 
 
-def parse_rig_json(path: str) -> Rig:
+def parse_rig_json(path: str):
     return RigFile.parse_file(path).rig
+   
