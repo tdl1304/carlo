@@ -32,7 +32,7 @@ else:
     generate_images = False
 
 rig = parse_rig_json(sys.argv[1])
-scale = 1
+scale = 3
 
 def lidar_to_histogram_features(lidar, yt: float):
     """
@@ -71,7 +71,7 @@ def lidar_to_img(lidar, yt):
 
 
 with Session() as session:
-    vehicles = spawn_vehicles(50, autopilot=True)
+    vehicles = spawn_vehicles(1, autopilot=True)
     ego = spawn_ego(autopilot=True, filter="vehicle.*")
     print(f"Ego: {ego}")
 
@@ -146,8 +146,6 @@ with Session() as session:
         output_dir.mkdir(exist_ok=True, parents=True)
         image_dir = output_dir / 'images'
         image_dir.mkdir(exist_ok=True, parents=True)
-        for name in camera_queues.keys():
-            (image_dir / name).mkdir(exist_ok=True, parents=True)
 
     # settings and initial values
     image_tick = 0
@@ -182,13 +180,10 @@ with Session() as session:
             # Store the image at a given path
             for name in cam_data.keys():
                 image = cam_data[name]
-                file_path = str(image_dir / f'{name}/{count:04d}.png')
+                file_path = str(image_dir / f'{name}_{count:04d}.png')
                 cv2.imwrite(file_path, image)
-                print(f"Saved image to {file_path}")
-                break
-            break
             count += 1
-        
+            
         cv2.imshow(window_title, im)
 
         image_tick += 1
