@@ -71,8 +71,11 @@ def lidar_to_img(lidar, yt):
 
 
 with Session() as session:
-    vehicles = spawn_vehicles(1, autopilot=True)
+    #vehicles = spawn_vehicles(1, autopilot=True)
+    session.traffic_manager.global_percentage_speed_difference(50)
     ego = spawn_ego(autopilot=True, filter="vehicle.*")
+    session.traffic_manager.vehicle_lane_offset(ego, -2)
+    session.traffic_manager.ignore_lights_percentage(ego, 100)
     print(f"Ego: {ego}")
 
     session.world.tick()
@@ -149,9 +152,9 @@ with Session() as session:
 
     # settings and initial values
     image_tick = 0
-    ticks_per_image = 3
+    ticks_per_image = 10
     count = 0
-    while image_tick <= 70 * ticks_per_image:
+    while image_tick <= 70 * 3:#ticks_per_image:
         timer_iter.tick("dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz")
         session.world.tick()
 
@@ -175,7 +178,7 @@ with Session() as session:
         im = np.concatenate([im_top, im_mid, im_bot], axis=0)
 
         # Store image every n-th tick
-        if generate_images & image_tick % ticks_per_image == 0 :
+        if generate_images and image_tick % ticks_per_image == 0 :
             
             # Store the image at a given path
             for name in cam_data.keys():
@@ -191,5 +194,5 @@ with Session() as session:
             break
 
     cv2.destroyWindow(window_title)
-    session.destroy_actors(vehicles + [ego])
+    session.destroy_actors([ego])
 
