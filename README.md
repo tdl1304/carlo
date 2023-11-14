@@ -10,7 +10,7 @@ Install requirements first:
 #### We are using version 0.9.14 at the time of this project
 - Download for Ubuntu via [Link](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
 - Unzip in any location
-- run ./CarlaUE4.sh to run carla server
+- run ./CarlaUE4.sh -RenderOfScreen to run carla server without UI
 
 add alias for carla:  
 alias carla='/path/to/carla/CarlaUE4.sh'

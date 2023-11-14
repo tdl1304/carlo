@@ -1,3 +1,4 @@
+import os
 import sys
 import pathlib
 
@@ -7,6 +8,7 @@ from typing import List
 import carla
 import cv2
 import numpy as np
+from datetime import datetime
 
 from src.common.session import Session
 from src.common.spawn import spawn_ego, spawn_vehicles
@@ -16,17 +18,21 @@ from src.util.timer import Timer
 from src.util.vehicle import get_back_axle_position
 from src.common.rig import Rig, Sensor, parse_rig_json
 
-if not len(sys.argv) == 2:
-    print(f"Usage: {pathlib.Path(__file__).name} <rig.json>")
+if not len(sys.argv) > 1:
+    print(f"Usage: {pathlib.Path(__file__).name} <rig.json> 1")
     sys.exit(1)
 
 if not pathlib.Path(sys.argv[1]).exists():
     print(f"Rig file {sys.argv[1]} does not exist")
     sys.exit(1)
 
-rig = parse_rig_json(sys.argv[1])
-scale = 2
+if len(sys.argv) == 3:
+    generate_images = int(sys.argv[2])
+else:
+    generate_images = False
 
+rig = parse_rig_json(sys.argv[1])
+scale = 1
 
 def lidar_to_histogram_features(lidar, yt: float):
     """
@@ -132,8 +138,22 @@ with Session() as session:
     blank = np.zeros((cameras[0].properties.height // scale, cameras[0].properties.width // scale, 4), np.uint8)
     half_blank = np.zeros((cameras[0].properties.height // scale,
                           cameras[0].properties.width // scale // 2, 4), np.uint8)
+    
+    # Create a directory to store the images
+    if generate_images:
+        root_path = pathlib.Path(os.curdir)
+        output_dir = root_path / "runs" / str(int(datetime.timestamp(datetime.now())))
+        output_dir.mkdir(exist_ok=True, parents=True)
+        image_dir = output_dir / 'images'
+        image_dir.mkdir(exist_ok=True, parents=True)
+        for name in camera_queues.keys():
+            (image_dir / name).mkdir(exist_ok=True, parents=True)
 
-    while True:
+    # settings and initial values
+    image_tick = 0
+    ticks_per_image = 3
+    count = 0
+    while image_tick <= 70 * ticks_per_image:
         timer_iter.tick("dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz")
         session.world.tick()
 
@@ -149,16 +169,32 @@ with Session() as session:
 
         top_row = [half_blank, cam_data['C1_front60Single'], cam_data['C3_tricam120'], cam_data['C2_tricam60'], half_blank]
         mid_row = [cam_data['C6_L1'], cam_data['C7_L2'], cam_data['C8_R2'], cam_data['C5_R1']]
-        #bot_row = [lidar_img, half_blank, cam_data['C4_rearCam'], half_blank, blank]
+        bot_row = [blank, half_blank, cam_data['C4_rearCam'], half_blank, blank] #lidar_img on first col
 
         im_top = np.concatenate(top_row, axis=1)
         im_mid = np.concatenate(mid_row, axis=1)
-        #im_bot = np.concatenate(bot_row, axis=1)
-        im = np.concatenate([im_top, im_mid], axis=0) #, im_bot
+        im_bot = np.concatenate(bot_row, axis=1)
+        im = np.concatenate([im_top, im_mid, im_bot], axis=0)
 
+        # Store image every n-th tick
+        if generate_images & image_tick % ticks_per_image == 0 :
+            
+            # Store the image at a given path
+            for name in cam_data.keys():
+                image = cam_data[name]
+                file_path = str(image_dir / f'{name}/{count:04d}.png')
+                cv2.imwrite(file_path, image)
+                print(f"Saved image to {file_path}")
+                break
+            break
+            count += 1
+        
         cv2.imshow(window_title, im)
 
+        image_tick += 1
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
     cv2.destroyWindow(window_title)
+    session.destroy_actors(vehicles + [ego])
+
