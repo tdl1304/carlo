@@ -1,8 +1,6 @@
+import argparse
 import os
-import sys
 import pathlib
-
-from queue import Queue
 from typing import List
 
 import carla
@@ -18,21 +16,22 @@ from src.util.timer import Timer
 from src.util.vehicle import get_back_axle_position
 from src.common.rig import Rig, Sensor, parse_rig_json
 
-if not len(sys.argv) > 1:
-    print(f"Usage: {pathlib.Path(__file__).name} <rig.json> 1")
-    sys.exit(1)
+parser = argparse.ArgumentParser(
+                    prog='python -m src.scripts.camera_from_rig',
+                    description='Generates images from carla from given rig file',
+                    epilog='Enjoy the program! :)')
+parser.add_argument('--file', type=str, help='Path to rig file <rig.json>', default='rig.json')
+parser.add_argument('-gen-images', dest="generate_images", help='Generate images or not', default=False, action="store_true")
+parser.add_argument('-headless', help='Run in headless mode or not', default=False, action="store_true")
+args = parser.parse_args()
 
-if not pathlib.Path(sys.argv[1]).exists():
-    print(f"Rig file {sys.argv[1]} does not exist")
-    sys.exit(1)
+generate_images = args.generate_images
+headless = args.headless
 
-if len(sys.argv) == 3:
-    generate_images = int(sys.argv[2])
-else:
-    generate_images = False
+print("args"+str(args))
 
-rig = parse_rig_json(sys.argv[1])
-scale = 3
+rig = parse_rig_json(args.file)
+scale = 1
 
 def lidar_to_histogram_features(lidar, yt: float):
     """
@@ -135,12 +134,13 @@ with Session() as session:
 
     timer_iter = Timer()
 
-    window_title = "Camera"
-    cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
-
-    blank = np.zeros((cameras[0].properties.height // scale, cameras[0].properties.width // scale, 4), np.uint8)
-    half_blank = np.zeros((cameras[0].properties.height // scale,
-                          cameras[0].properties.width // scale // 2, 4), np.uint8)
+    # Create a window to show the camera
+    if not headless:
+        window_title = "Camera"
+        cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
+        blank = np.zeros((cameras[0].properties.height // scale, cameras[0].properties.width // scale, 4), np.uint8)
+        half_blank = np.zeros((cameras[0].properties.height // scale,
+                            cameras[0].properties.width // scale // 2, 4), np.uint8)
     
     # Create a directory to store the images
     if generate_images:
@@ -154,7 +154,7 @@ with Session() as session:
     image_tick = 0
     ticks_per_image = 10
     count = 0
-    while image_tick <= 70 * 3:#ticks_per_image:
+    while image_tick <= 70 * 2:#ticks_per_image:
         timer_iter.tick("dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz")
         session.world.tick()
 
@@ -167,32 +167,34 @@ with Session() as session:
         #     lidar_img = cv2.resize(lidar_img, (cameras[0].properties.width // scale, cameras[0].properties.height // scale))
         # else:
         #     lidar_img = blank
+        if not headless:
+            top_row = [half_blank, cam_data['C1_front60Single'], cam_data['C3_tricam120'], cam_data['C2_tricam60'], half_blank]
+            mid_row = [cam_data['C6_L1'], cam_data['C7_L2'], cam_data['C8_R2'], cam_data['C5_R1']]
+            bot_row = [blank, half_blank, cam_data['C4_rearCam'], half_blank, blank] #lidar_img on first col
 
-        top_row = [half_blank, cam_data['C1_front60Single'], cam_data['C3_tricam120'], cam_data['C2_tricam60'], half_blank]
-        mid_row = [cam_data['C6_L1'], cam_data['C7_L2'], cam_data['C8_R2'], cam_data['C5_R1']]
-        bot_row = [blank, half_blank, cam_data['C4_rearCam'], half_blank, blank] #lidar_img on first col
+            im_top = np.concatenate(top_row, axis=1)
+            im_mid = np.concatenate(mid_row, axis=1)
+            im_bot = np.concatenate(bot_row, axis=1)
+            im = np.concatenate([im_top, im_mid, im_bot], axis=0)
 
-        im_top = np.concatenate(top_row, axis=1)
-        im_mid = np.concatenate(mid_row, axis=1)
-        im_bot = np.concatenate(bot_row, axis=1)
-        im = np.concatenate([im_top, im_mid, im_bot], axis=0)
+            cv2.imshow(window_title, im)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
         # Store image every n-th tick
         if generate_images and image_tick % ticks_per_image == 0 :
             
             # Store the image at a given path
             for name in cam_data.keys():
+                if name in ['C3_tricam120', 'C7_L2', 'C5_R1']: #skip these cameras because car is in view
+                    continue
                 image = cam_data[name]
                 file_path = str(image_dir / f'{name}_{count:04d}.png')
                 cv2.imwrite(file_path, image)
             count += 1
-            
-        cv2.imshow(window_title, im)
-
         image_tick += 1
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
 
-    cv2.destroyWindow(window_title)
+    if not headless:
+        cv2.destroyWindow(window_title)
     session.destroy_actors([ego])
 
