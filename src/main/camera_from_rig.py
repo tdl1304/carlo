@@ -17,7 +17,7 @@ from src.util.vehicle import get_back_axle_position
 from src.common.rig import Rig, Sensor, parse_rig_json
 
 parser = argparse.ArgumentParser(
-                    prog='python -m src.scripts.camera_from_rig',
+                    prog='python -m src.main.camera_from_rig',
                     description='Generates images from carla from given rig file',
                     epilog='Enjoy the program! :)')
 parser.add_argument('--file', type=str, help='Path to rig file <rig.json>', default='rig.json')
