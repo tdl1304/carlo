@@ -38,7 +38,7 @@ with Session() as session:
     #vehicles = spawn_vehicles(1, autopilot=True)
     session.traffic_manager.global_percentage_speed_difference(50)
     ego = spawn_ego(autopilot=True, filter="vehicle.*")
-    session.traffic_manager.vehicle_lane_offset(ego, 0)
+    session.traffic_manager.vehicle_lane_offset(ego, 3)
     session.traffic_manager.ignore_lights_percentage(ego, 100)
     print(f"Ego: {ego}")
 
