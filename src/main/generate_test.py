@@ -31,7 +31,7 @@ print("args"+str(args))
 downscaleFactor = 3
 baseResX = 1920
 baseResY = 1208
-fov = 60
+fov = 90
 
 
 with Session() as session:
@@ -83,7 +83,7 @@ with Session() as session:
     image_tick = 0
     ticks_per_image = 5
     count = 0
-    skip_ticks = 10
+    skip_ticks = 25
     while image_tick <= 70 * ticks_per_image + skip_ticks:
         timer_iter.tick("dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz")
         session.world.tick()
