@@ -15,15 +15,16 @@ class CameraRig:
 
     # Constructor
     # transform: carla.Transform(base_location: carla.Location, base_rotation: carla.Rotation)
-    def __init__(self, transform: carla.Transform = base_transform, camera_settings: CameraSettings = base_camera_settings):
+    def __init__(self, transform: carla.Transform = base_transform, camera_settings: CameraSettings = base_camera_settings, sensor_type = "rgb"):
         self.transform = transform
         self.camera_settings = camera_settings
         self.camera = None
         self.camera_queue = None
         self.previous_image = None
+        self.sensor_type = sensor_type
 
     def create_camera(self, parent: carla.Actor) -> 'CameraRig':
-        if self.camera_settings.type == "depth":
+        if self.sensor_type == "depth":
             self.camera = Depth(parent=parent, transform=self.transform, settings=self.camera_settings)
         else:
             self.camera = Camera(parent=parent, transform=self.transform, settings=self.camera_settings)
@@ -48,21 +49,9 @@ class CameraRig:
             [0, 0, 1]
         ])
 
-        # Extrinsic parameters
-        extrinsic_matrix = np.eye(4)  # Assuming no extrinsic transformation for now
-        
-        translation = np.array([self.transform.location.x, self.transform.location.y, self.transform.location.z])
-        rotation = np.deg2rad(np.array([self.transform.rotation.roll, self.transform.rotation.pitch, self.transform.rotation.yaw]))
-        
-        # TODO transform to desired coordinate system
-        #t = carla_to_nerf_3(self.transform)
-        rotation_matrix = carla.Transform(np.identity(3))
-        rotation_matrix = carla.Transform.rotation_matrix(rotation_matrix, carla.Rotation(yaw=rotation[2], pitch=rotation[1], roll=rotation[0]))
-
-        # Construct the extrinsic matrix
-        extrinsic_matrix = np.eye(4)
-        extrinsic_matrix[:3, :3] = rotation_matrix
-        extrinsic_matrix[:3, 3] = translation
+        # 3x4 matrix extrinsics_matrix
+        transform_m = np.array(self.transform.get_matrix())
+        extrinsic_matrix = transform_m[:3, :]
 
         # KITTI-style projection matrix [3x4]
         projection_matrix = np.dot(K, extrinsic_matrix)[:3, :]  # Discard the last row

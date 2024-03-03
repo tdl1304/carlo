@@ -6,10 +6,15 @@ from src.sensors.camera_rig import CameraRig
 import carla
 
 overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotation(pitch=-90))
-base_camera_rig = [
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920, image_size_y=1208, fov=90)),
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920, image_size_y=1208, fov=90, type="depth")),
 
+base_camera_rig = [
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90)),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90)),
+]
+
+base_depth_camera_rig = [
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90), sensor_type="depth"),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90), sensor_type="depth"),
 ]
 
 experiment_test = Experiment(
@@ -17,8 +22,14 @@ experiment_test = Experiment(
     experiments=[
         ExperimentSettings(
             stop_distance=50,
-            camera_rigs=base_camera_rig
+            camera_rigs=base_camera_rig,
+            ticks_per_image=5
         ),
+        ExperimentSettings(
+           stop_distance=50,
+           camera_rigs=base_depth_camera_rig,
+           ticks_per_image=5,
+        )
     ]
 )
 

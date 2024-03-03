@@ -17,7 +17,6 @@ class CameraSettings:
     iso: Optional[float] = None
     gamma: Optional[float] = None
     shutter_speed: Optional[float] = None
-    type: str = "rgb"
 
 
 class Camera(SensorBase[carla.Image, CameraSettings]):

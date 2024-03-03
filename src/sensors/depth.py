@@ -7,14 +7,7 @@ import numpy as np
 from src.sensors.camera import CameraSettings
 from .sensor import SensorBase
 
-@dataclass
-class DepthSettings(CameraSettings):
-    image_size_x: int
-    image_size_y: int
-    fov: float
-    type: str = "depth"
-
-class Depth(SensorBase[carla.Image, DepthSettings]):
+class Depth(SensorBase[carla.Image, CameraSettings]):
     DEFAULT_BLUEPRINT = 'sensor.camera.depth'
     
     def add_numpy_queue(self) -> 'Queue[np.ndarray]':
