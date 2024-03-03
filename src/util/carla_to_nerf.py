@@ -77,8 +77,8 @@ def carla_to_nerf_3(camera_transform: carla.Transform):
     # Convert from Unreal Engine to Blender coordinate system
     # From Carla Docs: Warning: The declaration order is different in CARLA (pitch,yaw,roll), and in the Unreal Engine Editor (roll,pitch,yaw). When working in a build from source, don't mix up the axes' rotations.
     blender_matrix = carla.Transform(
-        carla.Location(x=-unreal_location.y, y=unreal_location.x, z=unreal_location.z),
-        carla.Rotation(roll=unreal_rotation.roll, pitch=unreal_rotation.pitch, yaw=unreal_rotation.yaw + 90)
+        carla.Location(x=unreal_location.y, y=unreal_location.z, z=-unreal_location.x),
+        carla.Rotation(roll=unreal_rotation.pitch, pitch=unreal_rotation.yaw, yaw=unreal_rotation.roll)
     )
     
     return blender_matrix.get_matrix()

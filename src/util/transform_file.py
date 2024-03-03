@@ -8,7 +8,7 @@ import numpy as np
 
 from datetime import datetime
 
-from src.util.carla_to_nerf import carla_to_nerf
+from src.util.carla_to_nerf import carla_to_nerf_3
 
 
 class TransformFile:
@@ -37,7 +37,7 @@ class TransformFile:
 
         self.frames.append({
             'file_path': f'images/{file_path.split("/")[-1]}',
-            'transform_matrix': carla_to_nerf(transform)
+            'transform_matrix': carla_to_nerf_3(transform)
         })
 
     def compute_intrinsics(self, image_size_x, image_size_y, fov):
