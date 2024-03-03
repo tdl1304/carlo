@@ -100,6 +100,7 @@ def run_session(experiment: Experiment):
 
             # Create cameras
             camera_rigs = [camera_rig.create_camera(ego) for camera_rig in run.camera_rigs] if run.camera_rigs is not None else []
+
             if run.rig_file_path is not None:
                 rig = rig = parse_rig_json(run.rig_file_path)
                 camera_rigs = create_camera_rigs_from_rig(ego=ego, rig=rig)

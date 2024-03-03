@@ -98,7 +98,7 @@ with Session() as session:
     lidar_queues = {}
 
     cameras = list(filter(lambda sensor: sensor.is_camera, rig.sensors))
-    #lidars = {sensor.name: sensor for sensor in rig.sensors if sensor.name == 'lidar:top'}
+    lidars = {sensor.name: sensor for sensor in rig.sensors if sensor.name == 'lidar:top'}
 
     def make_sensor_transform(sensor: Sensor) -> carla.Transform:
         return carla.Transform(
@@ -124,13 +124,13 @@ with Session() as session:
         camera.start()
         camera_queues[sensor.name] = camera_queue
 
-    # for name, sensor in lidars.items():
-    #         lidar = Lidar(parent=ego, transform=make_sensor_transform(sensor), settings={
+    for name, sensor in lidars.items():
+            lidar = Lidar(parent=ego, transform=make_sensor_transform(sensor), settings={
 
-    #         })
-    #         lidar_queue = lidar.add_numpy_queue()
-    #         lidar.start()
-    #         lidar_queues[name] = lidar_queue
+            })
+            lidar_queue = lidar.add_numpy_queue()
+            lidar.start()
+            lidar_queues[name] = lidar_queue
 
     timer_iter = Timer()
 
@@ -160,13 +160,13 @@ with Session() as session:
 
         # show the front cameras at the top row
         cam_data = {name: camera_queue.get() for name, camera_queue in camera_queues.items()}
-        #lidar_data = {name: lidar_queue.get() for name, lidar_queue in lidar_queues.items()}
+        lidar_data = {name: lidar_queue.get() for name, lidar_queue in lidar_queues.items()}
 
-        # if 'lidar:top' in lidar_data:
-        #     lidar_img = lidar_to_img(lidar_data['lidar:top'], make_sensor_transform(lidars['lidar:top']).location.z)
-        #     lidar_img = cv2.resize(lidar_img, (cameras[0].properties.width // scale, cameras[0].properties.height // scale))
-        # else:
-        #     lidar_img = blank
+        if 'lidar:top' in lidar_data:
+            lidar_img = lidar_to_img(lidar_data['lidar:top'], make_sensor_transform(lidars['lidar:top']).location.z)
+            lidar_img = cv2.resize(lidar_img, (cameras[0].properties.width // scale, cameras[0].properties.height // scale))
+        else:
+            lidar_img = blank
         if not headless:
             top_row = [half_blank, cam_data['C1_front60Single'], cam_data['C3_tricam120'], cam_data['C2_tricam60'], half_blank]
             mid_row = [cam_data['C6_L1'], cam_data['C7_L2'], cam_data['C8_R2'], cam_data['C5_R1']]

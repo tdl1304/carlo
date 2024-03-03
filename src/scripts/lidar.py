@@ -107,10 +107,10 @@ with Session(dt=1 / freq, phys_dt=0.01, phys_substeps=10) as session:
             time.sleep(0.005)
             frame += 1
 
-            # lidar_img = lidar_img.reshape((lidar_channels, -1))
-            # cv2.imshow('Lidar Image', lidar_img)
+            lidar_img = lidar_img.reshape((lidar_channels, -1))
+            cv2.imshow('Lidar Image', lidar_img)
 
-            cv2.imshow('RGB Camera', camera_data)
+            #cv2.imshow('RGB Camera', camera_data)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
