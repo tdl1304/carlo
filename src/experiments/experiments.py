@@ -7,15 +7,16 @@ import carla
 
 overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotation(pitch=-90))
 base_camera_rig = [
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30))),
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30))),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920, image_size_y=1208, fov=90)),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920, image_size_y=1208, fov=90, type="depth")),
+
 ]
 
 experiment_test = Experiment(
     experiment_name='exp_test',
     experiments=[
         ExperimentSettings(
-            stop_distance=100,
+            stop_distance=50,
             camera_rigs=base_camera_rig
         ),
     ]

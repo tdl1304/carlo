@@ -99,7 +99,10 @@ def run_session(experiment: Experiment):
             prev_location = run.spawn_transform.location
 
             # Create cameras
-            camera_rigs = [camera_rig.create_camera(ego) for camera_rig in run.camera_rigs] if run.camera_rigs is not None else []
+            #camera_rigs = [camera_rig.create_camera(ego) for camera_rig in run.camera_rigs] if run.camera_rigs is not None else []
+            for camera_rig in run.camera_rigs:
+                camera_rig.create_camera(ego)
+
             if run.rig_file_path is not None:
                 rig = rig = parse_rig_json(run.rig_file_path)
                 camera_rigs = create_camera_rigs_from_rig(ego=ego, rig=rig)
@@ -117,6 +120,8 @@ def run_session(experiment: Experiment):
             transform_file.set_intrinsics(camera_settings.image_size_x,
                                           camera_settings.image_size_y,
                                           camera_settings.fov)
+        
+            print(camera_rigs[0].get_projection_matrix())
 
             while not (should_stop(next_action, stop_next_straight, distance_traveled, run.stop_distance)):
                 # timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')

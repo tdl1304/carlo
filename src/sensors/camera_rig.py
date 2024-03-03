@@ -2,6 +2,9 @@ import numpy as np
 from src.sensors.camera import Camera, CameraSettings
 import carla
 from queue import Queue
+from src.sensors.depth import Depth
+
+from src.util.carla_to_nerf import carla_to_nerf_3
 
 
 class CameraRig:
@@ -20,10 +23,52 @@ class CameraRig:
         self.previous_image = None
 
     def create_camera(self, parent: carla.Actor) -> 'CameraRig':
-        self.camera = Camera(parent=parent, transform=self.transform, settings=self.camera_settings)
+        if self.camera_settings.type == "depth":
+            self.camera = Depth(parent=parent, transform=self.transform, settings=self.camera_settings)
+        else:
+            self.camera = Camera(parent=parent, transform=self.transform, settings=self.camera_settings)
         self.camera_queue = self.camera.add_numpy_queue()
         self.camera.start()
         return self
+    
+    def get_projection_matrix(self) -> np.ndarray:
+        # Get camera settings
+        camera_settings = self.get_camera_settings()
+
+        # Intrinsic parameters
+        fx = camera_settings.image_size_x / (2.0 * np.tan(np.deg2rad(camera_settings.fov / 2.0)))
+        fy = camera_settings.image_size_y / (2.0 * np.tan(np.deg2rad(camera_settings.fov / 2.0)))
+        cx = camera_settings.image_size_x / 2.0
+        cy = camera_settings.image_size_y / 2.0
+
+        # Intrinsic matrix
+        K = np.array([
+            [fx, 0, cx],
+            [0, fy, cy],
+            [0, 0, 1]
+        ])
+
+        # Extrinsic parameters
+        extrinsic_matrix = np.eye(4)  # Assuming no extrinsic transformation for now
+        
+        translation = np.array([self.transform.location.x, self.transform.location.y, self.transform.location.z])
+        rotation = np.deg2rad(np.array([self.transform.rotation.roll, self.transform.rotation.pitch, self.transform.rotation.yaw]))
+        
+        # TODO transform to desired coordinate system
+        #t = carla_to_nerf_3(self.transform)
+        rotation_matrix = carla.Transform(np.identity(3))
+        rotation_matrix = carla.Transform.rotation_matrix(rotation_matrix, carla.Rotation(yaw=rotation[2], pitch=rotation[1], roll=rotation[0]))
+
+        # Construct the extrinsic matrix
+        extrinsic_matrix = np.eye(4)
+        extrinsic_matrix[:3, :3] = rotation_matrix
+        extrinsic_matrix[:3, 3] = translation
+
+        # KITTI-style projection matrix [3x4]
+        projection_matrix = np.dot(K, extrinsic_matrix)[:3, :]  # Discard the last row
+
+        return projection_matrix
+
 
     def get_camera_settings(self) -> CameraSettings:
         return self.camera_settings
