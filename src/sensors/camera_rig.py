@@ -1,4 +1,5 @@
 import numpy as np
+from src.sensors.segmentation import Segmentation
 from src.sensors.camera import Camera, CameraSettings
 import carla
 from queue import Queue
@@ -8,7 +9,7 @@ from src.util.carla_to_nerf import carla_to_nerf_3
 
 
 class CameraRig:
-    base_camera_settings = CameraSettings(image_size_x=600, image_size_y=450, fov=90)
+    base_camera_settings = CameraSettings(image_size_x=600, image_size_y=450, fov=90, enable_postprocess_effects=True)
     base_rotation = carla.Rotation(yaw=0, pitch=0, roll=0)
     base_location = carla.Location(z=3.0)
     base_transform = carla.Transform(base_location, base_rotation)
@@ -26,6 +27,8 @@ class CameraRig:
     def create_camera(self, parent: carla.Actor) -> 'CameraRig':
         if self.sensor_type == "depth":
             self.camera = Depth(parent=parent, transform=self.transform, settings=self.camera_settings)
+        elif self.sensor_type == "segmentation":
+            self.camera = Segmentation(parent=parent, transform=self.transform, settings=self.camera_settings)
         else:
             self.camera = Camera(parent=parent, transform=self.transform, settings=self.camera_settings)
         self.camera_queue = self.camera.add_numpy_queue()
