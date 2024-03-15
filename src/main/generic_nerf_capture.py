@@ -25,8 +25,9 @@ def setup_traffic_manager(traffic_manager: carla.TrafficManager, ego: carla.Acto
     if path == "left-loop":
         traffic_manager.set_route(ego, ["Left"] * turns)
     elif path == "city-wander":
+        traffic_manager.set_route(ego, ["Straight"])
         # TODO: Make this deterministic
-        pass # Don't specify a route
+        # pass # Don't specify a route
 
 
 def get_distance_traveled(prev_location, current_location):
@@ -79,9 +80,8 @@ def run_session(experiment: Experiment):
     # create_slurm_script(carlo_data_dir=experiment_path,
     #                     input_data_dir=f"../carlo/{experiment_path}", output_dir=f"../carlo/{experiment_path}", experiment_name=f"{experiment.experiment_name}_no_optimizer",
     #                     script_name="job_no_optimizer.slurm", extra_args="--pipeline.datamanager.camera-optimizer.mode off")
-
+    import time
     with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
-
         # Run all the experiments in the same session.
         for index, run in enumerate(experiment.experiments):
             ego = spawn_ego(autopilot=True, spawn_point=run.spawn_transform, filter="vehicle.tesla.model3")

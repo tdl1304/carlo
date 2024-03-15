@@ -6,30 +6,36 @@ from src.sensors.camera_rig import CameraRig
 import carla
 
 overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotation(pitch=-90))
-
+scale = 1
 base_camera_rig = [
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90)),
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90)),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90)),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90)),
 ]
 
 base_depth_camera_rig = [
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90), sensor_type="depth"),
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//3, image_size_y=1208//3, fov=90), sensor_type="depth"),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90), sensor_type="depth"),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90), sensor_type="depth"),
 ]
 
 experiment_test = Experiment(
     experiment_name='exp_test',
     experiments=[
         ExperimentSettings(
-            stop_distance=50,
-            camera_rigs=base_camera_rig,
-            ticks_per_image=5
+            stop_distance=180,
+            camera_rigs=base_camera_rig.extend(base_depth_camera_rig),
+            ticks_per_image=5,
+            path="city-wander",
+            percentage_speed_difference=100,
+            # in front of straight road
+            spawn_transform=carla.Transform(carla.Location(x=89.386559, y=13.362594, z=0.5),
+                                             carla.Rotation(pitch=0, yaw=180, roll=0))
+                        
         ),
-        ExperimentSettings(
-           stop_distance=50,
-           camera_rigs=base_depth_camera_rig,
-           ticks_per_image=5,
-        )
+        # ExperimentSettings(
+        #    stop_distance=50,
+        #    camera_rigs=base_depth_camera_rig,
+        #    ticks_per_image=5,
+        # )
     ]
 )
 
