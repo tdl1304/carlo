@@ -5,7 +5,7 @@ import carla
 
 #max camera rig count = 2
 overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotation(pitch=-90))
-scale = 3
+scale = 1
 base_camera_rig = [
     CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90)),
     CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90)),
