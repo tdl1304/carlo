@@ -1,10 +1,9 @@
-from dataclasses import dataclass
-from typing import List
 from src.experiments.experiment_settings import Experiment, ExperimentSettings, GaussianNoise
 from src.sensors.camera import CameraSettings
 from src.sensors.camera_rig import CameraRig
 import carla
 
+#max camera rig count = 2
 overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotation(pitch=-90))
 scale = 3
 base_camera_rig = [
@@ -22,26 +21,31 @@ base_segmentation_camera_rig = [
     CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90), sensor_type="segmentation"),
 ]
 
-other_camera_rigs = base_depth_camera_rig.extend(base_segmentation_camera_rig)
-
 experiment_test = Experiment(
     experiment_name='exp_test',
     experiments=[
+        # ExperimentSettings(
+        #     stop_distance=50,
+        #     camera_rigs=base_camera_rig
+        # ),
         ExperimentSettings(
             stop_distance=180,
             camera_rigs=base_camera_rig,
-            ticks_per_image=5,
             path="city-wander",
-            percentage_speed_difference=100,
             spawn_transform=carla.Transform(carla.Location(x=89.386559, y=13.362594, z=0.5),
                                              carla.Rotation(pitch=0, yaw=180, roll=0))
         ),
         ExperimentSettings(
             stop_distance=180,
-            camera_rigs=other_camera_rigs,
-            ticks_per_image=5,
+            camera_rigs=base_depth_camera_rig,
             path="city-wander",
-            percentage_speed_difference=100,
+            spawn_transform=carla.Transform(carla.Location(x=89.386559, y=13.362594, z=0.5),
+                                             carla.Rotation(pitch=0, yaw=180, roll=0))
+        ),
+        ExperimentSettings(
+            stop_distance=180,
+            camera_rigs=base_segmentation_camera_rig,
+            path="city-wander",
             spawn_transform=carla.Transform(carla.Location(x=89.386559, y=13.362594, z=0.5),
                                              carla.Rotation(pitch=0, yaw=180, roll=0))
         ),

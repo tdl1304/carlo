@@ -120,7 +120,7 @@ def run_session(experiment: Experiment):
                                           camera_settings.fov)
 
             while not (should_stop(next_action, stop_next_straight, distance_traveled, run.stop_distance)):
-                # timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')
+                #timer_iter.tick('dt: {dt:.3f} s, avg: {avg:.3f} s, FPS: {fps:.1f} Hz')
                 session.world.tick()
 
                 # Stack images together horizontally
