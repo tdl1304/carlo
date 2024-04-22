@@ -43,7 +43,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2]:
+        if int_generation in [1, 2, 3]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -54,50 +54,128 @@ def get_actor_blueprints(world, filter, generation):
         return []
 
 def main():
-    host = '127.0.0.1'
-    port = 2000
-    number_of_vehicles = 30
-    number_of_walkers = 10
-    filterv = 'vehicle.*'
-    generationv = 'All'
-    filterw = 'walker.pedestrian.*'
-    generationw = '2'
-    tm_port = 8000
-    seed = 0
-    seedw = 0
-    respawn = False
-    safe = False
-    asynch = False
-    hybrid = False
-    car_lights_on = False
-    no_rendering = False
-    hero = False
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-n', '--number-of-vehicles',
+        metavar='N',
+        default=30,
+        type=int,
+        help='Number of vehicles (default: 30)')
+    argparser.add_argument(
+        '-w', '--number-of-walkers',
+        metavar='W',
+        default=10,
+        type=int,
+        help='Number of walkers (default: 10)')
+    argparser.add_argument(
+        '--safe',
+        action='store_true',
+        help='Avoid spawning vehicles prone to accidents')
+    argparser.add_argument(
+        '--filterv',
+        metavar='PATTERN',
+        default='vehicle.*',
+        help='Filter vehicle model (default: "vehicle.*")')
+    argparser.add_argument(
+        '--generationv',
+        metavar='G',
+        default='All',
+        help='restrict to certain vehicle generation (values: "1","2","All" - default: "All")')
+    argparser.add_argument(
+        '--filterw',
+        metavar='PATTERN',
+        default='walker.pedestrian.*',
+        help='Filter pedestrian type (default: "walker.pedestrian.*")')
+    argparser.add_argument(
+        '--generationw',
+        metavar='G',
+        default='2',
+        help='restrict to certain pedestrian generation (values: "1","2","All" - default: "2")')
+    argparser.add_argument(
+        '--tm-port',
+        metavar='P',
+        default=8000,
+        type=int,
+        help='Port to communicate with TM (default: 8000)')
+    argparser.add_argument(
+        '--asynch',
+        action='store_true',
+        help='Activate asynchronous mode execution')
+    argparser.add_argument(
+        '--hybrid',
+        action='store_true',
+        help='Activate hybrid mode for Traffic Manager')
+    argparser.add_argument(
+        '-s', '--seed',
+        metavar='S',
+        type=int,
+        help='Set random device seed and deterministic mode for Traffic Manager')
+    argparser.add_argument(
+        '--seedw',
+        metavar='S',
+        default=0,
+        type=int,
+        help='Set the seed for pedestrians module')
+    argparser.add_argument(
+        '--car-lights-on',
+        action='store_true',
+        default=False,
+        help='Enable automatic car light management')
+    argparser.add_argument(
+        '--hero',
+        action='store_true',
+        default=False,
+        help='Set one of the vehicles as hero')
+    argparser.add_argument(
+        '--respawn',
+        action='store_true',
+        default=False,
+        help='Automatically respawn dormant vehicles (only in large maps)')
+    argparser.add_argument(
+        '--no-rendering',
+        action='store_true',
+        default=False,
+        help='Activate no rendering mode')
+
+    args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
     vehicles_list = []
     walkers_list = []
     all_id = []
-    client = carla.Client(host, port)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     synchronous_master = False
-    random.seed(seed if seed is not None else int(time.time()))
+    random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         world = client.get_world()
 
-        traffic_manager = client.get_trafficmanager(tm_port)
+        traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.5)
-        if respawn:
+        if args.respawn:
             traffic_manager.set_respawn_dormant_vehicles(True)
-        if hybrid:
+        if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
             traffic_manager.set_hybrid_physics_radius(70.0)
-        if seed is not None:
-            traffic_manager.set_random_device_seed(seed)
+        if args.seed is not None:
+            traffic_manager.set_random_device_seed(args.seed)
 
         settings = world.get_settings()
-        if not asynch:
+        if not args.asynch:
             traffic_manager.set_synchronous_mode(True)
             if not settings.synchronous_mode:
                 synchronous_master = True
@@ -110,14 +188,18 @@ def main():
             you could experience some issues. If it's not working correctly, switch to synchronous \
             mode by using traffic_manager.set_synchronous_mode(True)")
 
-        if no_rendering:
+        if args.no_rendering:
             settings.no_rendering_mode = True
         world.apply_settings(settings)
 
-        blueprints = get_actor_blueprints(world, filterv, generationv)
-        blueprintsWalkers = get_actor_blueprints(world, filterw, generationw)
+        blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
+        if not blueprints:
+            raise ValueError("Couldn't find any vehicles with the specified filters")
+        blueprintsWalkers = get_actor_blueprints(world, args.filterw, args.generationw)
+        if not blueprintsWalkers:
+            raise ValueError("Couldn't find any walkers with the specified filters")
 
-        if safe:
+        if args.safe:
             blueprints = [x for x in blueprints if x.get_attribute('base_type') == 'car']
 
         blueprints = sorted(blueprints, key=lambda bp: bp.id)
@@ -125,12 +207,12 @@ def main():
         spawn_points = world.get_map().get_spawn_points()
         number_of_spawn_points = len(spawn_points)
 
-        if number_of_vehicles < number_of_spawn_points:
+        if args.number_of_vehicles < number_of_spawn_points:
             random.shuffle(spawn_points)
-        elif number_of_vehicles > number_of_spawn_points:
+        elif args.number_of_vehicles > number_of_spawn_points:
             msg = 'requested %d vehicles, but could only find %d spawn points'
-            logging.warning(msg, number_of_vehicles, number_of_spawn_points)
-            number_of_vehicles = number_of_spawn_points
+            logging.warning(msg, args.number_of_vehicles, number_of_spawn_points)
+            args.number_of_vehicles = number_of_spawn_points
 
         # @todo cannot import these directly.
         SpawnActor = carla.command.SpawnActor
@@ -141,9 +223,9 @@ def main():
         # Spawn vehicles
         # --------------
         batch = []
-        hero = hero
+        hero = args.hero
         for n, transform in enumerate(spawn_points):
-            if n >= number_of_vehicles:
+            if n >= args.number_of_vehicles:
                 break
             blueprint = random.choice(blueprints)
             if blueprint.has_attribute('color'):
@@ -169,7 +251,7 @@ def main():
                 vehicles_list.append(response.actor_id)
 
         # Set automatic vehicle lights update if specified
-        if car_lights_on:
+        if args.car_lights_on:
             all_vehicle_actors = world.get_actors(vehicles_list)
             for actor in all_vehicle_actors:
                 traffic_manager.update_vehicle_lights(actor, True)
@@ -180,12 +262,12 @@ def main():
         # some settings
         percentagePedestriansRunning = 0.0      # how many pedestrians will run
         percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
-        if seedw:
-            world.set_pedestrians_seed(seedw)
-            random.seed(seedw)
+        if args.seedw:
+            world.set_pedestrians_seed(args.seedw)
+            random.seed(args.seedw)
         # 1. take all the random locations to spawn
         spawn_points = []
-        for i in range(number_of_walkers):
+        for i in range(args.number_of_walkers):
             spawn_point = carla.Transform()
             loc = world.get_random_location_from_navigation()
             if (loc != None):
@@ -238,7 +320,7 @@ def main():
         all_actors = world.get_actors(all_id)
 
         # wait for a tick to ensure client receives the last transform of the walkers we have just created
-        if asynch or not synchronous_master:
+        if args.asynch or not synchronous_master:
             world.wait_for_tick()
         else:
             world.tick()
@@ -260,14 +342,14 @@ def main():
         traffic_manager.global_percentage_speed_difference(30.0)
 
         while True:
-            if not asynch and synchronous_master:
+            if not args.asynch and synchronous_master:
                 world.tick()
             else:
                 world.wait_for_tick()
 
     finally:
 
-        if not asynch and synchronous_master:
+        if not args.asynch and synchronous_master:
             settings = world.get_settings()
             settings.synchronous_mode = False
             settings.no_rendering_mode = False

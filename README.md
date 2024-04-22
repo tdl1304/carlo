@@ -127,14 +127,11 @@ poetry install
 ### Run data collection with
 
 ```sh
-python -m src.scripts.sicko
+python -m src.main.generic_nerf_capture
 ```
 
-(or for a more pleasant experience)
 
-```sh
-python -m src.scripts.camera
-```
+edit /experiments to to setup different captures.
 
 
 # Running on Idun

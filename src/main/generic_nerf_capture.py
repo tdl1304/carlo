@@ -24,10 +24,10 @@ def setup_traffic_manager(traffic_manager: carla.TrafficManager, ego: carla.Acto
         ego, percentage_speed_difference)  # 100% slower than speed limit
     if path == "left-loop":
         traffic_manager.set_route(ego, ["Left"] * turns)
-    elif path == "city-wander":
+    elif path == "straight":
         traffic_manager.set_route(ego, ["Straight"])
-        # TODO: Make this deterministic
-        # pass # Don't specify a route
+    else:
+        pass
 
 
 def get_distance_traveled(prev_location, current_location):
@@ -82,6 +82,8 @@ def run_session(experiment: Experiment):
     #                     script_name="job_no_optimizer.slurm", extra_args="--pipeline.datamanager.camera-optimizer.mode off")
     import time
     with Session(dt=0.1, phys_dt=0.01, phys_substeps=10) as session:
+        for actor in session.world.get_actors():
+            actor.destroy()
         # Run all the experiments in the same session.
         for index, run in enumerate(experiment.experiments):
             ego = spawn_ego(autopilot=True, spawn_point=run.spawn_transform, filter="vehicle.tesla.model3")
