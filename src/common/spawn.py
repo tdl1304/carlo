@@ -6,7 +6,6 @@ import carla
 from .session import session
 from .log import info
 
-
 def spawn_vehicles(
     count: int,
     filter: str = 'vehicle.*',

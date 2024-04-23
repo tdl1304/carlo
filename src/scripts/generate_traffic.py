@@ -166,6 +166,7 @@ def main():
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.5)
+        
         if args.respawn:
             traffic_manager.set_respawn_dormant_vehicles(True)
         if args.hybrid:
@@ -180,7 +181,7 @@ def main():
             if not settings.synchronous_mode:
                 synchronous_master = True
                 settings.synchronous_mode = True
-                settings.fixed_delta_seconds = 0.05
+                settings.fixed_delta_seconds = 0.01
             else:
                 synchronous_master = False
         else:
@@ -251,10 +252,12 @@ def main():
                 vehicles_list.append(response.actor_id)
 
         # Set automatic vehicle lights update if specified
-        if args.car_lights_on:
-            all_vehicle_actors = world.get_actors(vehicles_list)
-            for actor in all_vehicle_actors:
+        all_vehicle_actors = world.get_actors(vehicles_list)
+        for actor in all_vehicle_actors:
+            if args.car_lights_on:
                 traffic_manager.update_vehicle_lights(actor, True)
+            traffic_manager.ignore_lights_percentage(actor, 100)  # Ignore traffic lights 100% of the time
+            traffic_manager.vehicle_percentage_speed_difference(actor, 0)  # 100% slower than speed limit
 
         # -------------
         # Spawn Walkers
@@ -339,7 +342,7 @@ def main():
         print('spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(vehicles_list), len(walkers_list)))
 
         # Example of how to use Traffic Manager parameters
-        traffic_manager.global_percentage_speed_difference(30.0)
+        # traffic_manager.global_percentage_speed_difference(0)
 
         while True:
             if not args.asynch and synchronous_master:

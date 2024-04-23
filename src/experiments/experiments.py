@@ -25,13 +25,14 @@ loc = carla.Location(x=89.386559, y=13.362594, z=0.5)
 rotation = carla.Rotation(pitch=0, yaw=180, roll=0)
 
 experiment_test = Experiment(
-    experiment_name='exp_test_2',
+    experiment_name='exp_test',
     experiments=[
         ExperimentSettings(
             stop_distance=180,
             camera_rigs=base_camera_rig,
             path="straight",
-            spawn_transform=carla.Transform(loc, rotation)
+            spawn_transform=carla.Transform(loc, rotation),
+            spawn_traffic=True
         ),
         # ExperimentSettings(
         #     stop_distance=180,
