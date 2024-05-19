@@ -133,7 +133,8 @@ python -m src.main.generic_nerf_capture
 
 edit /experiments to to setup different captures.
 
-
+## Legacy
+<details>
 # Running on Idun
 
 Running all of this on Idun is actually pretty straight forward.
@@ -211,3 +212,4 @@ Then, run it with
 ```sh
 sbatch carla.slurm
 ```
+</details>
