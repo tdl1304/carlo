@@ -20,7 +20,7 @@ import random
 
 random.seed(0)
 
-def setup_traffic_manager(traffic_manager: carla.TrafficManager, actor: carla.Actor, turns: int, percentage_speed_difference: int, path: Literal["left-loop", "city-wander"]):
+def setup_traffic_manager(traffic_manager: carla.TrafficManager, actor: carla.Actor, turns: int, percentage_speed_difference: int, path: Literal["left-loop", "city-wander", "straight"]):
     traffic_manager.ignore_lights_percentage(actor, 100)  # Ignore traffic lights 100% of the time
     traffic_manager.vehicle_percentage_speed_difference(
         actor, percentage_speed_difference)  # 100% slower than speed limit
@@ -92,7 +92,7 @@ def run_session(experiment: Experiment):
                 for _ in range(10):
                     actors = spawn_vehicles(1, autopilot=True, filter="vehicle.tesla.model3")
                     for actor in actors:
-                        setup_traffic_manager(session.traffic_manager, actor, 0, run.percentage_speed_difference, "follow")
+                        setup_traffic_manager(session.traffic_manager, actor, 0, run.percentage_speed_difference, "city-wander")
 
             session.world.tick()
 
@@ -137,7 +137,7 @@ def run_session(experiment: Experiment):
 
                 # Show image
                 # img show a smaller version 30% of the original size if the image is too large
-                if camera_settings.image_size_x > 1000:
+                if (camera_settings.image_size_x or 0 ) > 1000:
                     cv2.imshow(window_title, cv2.resize(image, (0, 0), fx=0.3, fy=0.3))
                 else:
                     cv2.imshow(window_title, image)

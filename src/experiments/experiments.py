@@ -4,48 +4,35 @@ from src.sensors.camera_rig import CameraRig
 import carla
 
 #max camera rig count = 2
-overhead_camera_transform = carla.Transform(carla.Location(z=12.7), carla.Rotation(pitch=-90))
 scale = 1
 base_camera_rig = [
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90)),
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90)),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=10)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=60)),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-10)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=60)),
 ]
 
 base_depth_camera_rig = [
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90), sensor_type="depth"),
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90), sensor_type="depth"),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=10)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=60), sensor_type="depth"),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-10)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=60), sensor_type="depth"),
 ]
 
 base_segmentation_camera_rig = [
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90), sensor_type="segmentation"),
-    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-30)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=90), sensor_type="segmentation"),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=10)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=60), sensor_type="segmentation"),
+    CameraRig(transform=carla.Transform(carla.Location(z=3.0), carla.Rotation(yaw=-10)), camera_settings=CameraSettings(image_size_x=1920//scale, image_size_y=1208//scale, fov=60), sensor_type="segmentation"),
 ]
 
 loc = carla.Location(x=89.386559, y=13.362594, z=0.5)
 rotation = carla.Rotation(pitch=0, yaw=180, roll=0)
 
 experiment_test = Experiment(
-    experiment_name='exp_test',
+    experiment_name='carla_baseline',
     experiments=[
         ExperimentSettings(
             stop_distance=180,
             camera_rigs=base_camera_rig,
             path="straight",
             spawn_transform=carla.Transform(loc, rotation),
-            spawn_traffic=True
+            spawn_traffic=False
         ),
-        # ExperimentSettings(
-        #     stop_distance=180,
-        #     camera_rigs=base_depth_camera_rig,
-        #     path="straight",
-        #     spawn_transform=carla.Transform(loc, rotation)
-        # ),
-        # ExperimentSettings(
-        #     stop_distance=180,
-        #     camera_rigs=base_segmentation_camera_rig,
-        #     path="straight",
-        #     spawn_transform=carla.Transform(loc, rotation)
-        # ),
     ]
 )
 
